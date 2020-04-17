@@ -32,8 +32,8 @@ class Signal:
         """
         name = name.lower()
         if name not in self.sig_dict.keys():
-            raise ValueError(f"Signal does not exist.
-            Perhaps used an incorrect stem? Current stem: {self.stems}")
+            raise ValueError(f"""Signal does not exist.
+Perhaps used an incorrect stem? Current stem: {self.stems}""")
         return self.sig_dict.get(name)
 
     def set(self, signal_name: str, signal: Iterable[float, float]):
@@ -42,7 +42,7 @@ class Signal:
            Args:
                 signal_name (str): Signal name to update.
                 signal (iterable[float, float]): Updated signal.
-           
+
            Raises:
                 ValueError: when signal name does not match or
                             if the length of the signal does not match.
@@ -50,11 +50,14 @@ class Signal:
         signal_name = signal_name.lower()
 
         if signal_name not in self.sig_dict.keys():
-           raise ValueError("Cannot add new signal.")
+           raise ValueError("Cannot add new signal. New signal should pre-exist.")
 
         length = len(signal)
         if length != self.length:
             raise ValueError("New audio signal is not of the same duration.")
 
         self.sig_dict[signal_name] = signal
+
+    def __len__(self):
+        return self.length
 

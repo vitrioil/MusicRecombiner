@@ -33,11 +33,11 @@ class SpleeterSeparator(ABCSeparator):
 
     def separate(self, audio_file: pathlib.Path, sample_rate=44_100):
         """Separate audio into specified stems.
-            
+
             Note: Spleeter uses tensorflow backend. Hence, corresponding
             installed device will automatically be used (CPU/GPU).
             Minimum VRAM/RAM requirement: 4GB (for small audio, <6 minutes).
-            
+
             Args:
                 audio_file (Path): path to the original signal.
                 sample_rate (int): sampling rate of the file.
@@ -56,4 +56,4 @@ class SpleeterSeparator(ABCSeparator):
         signal = Signal(prediction.keys(), prediction.values())
 
         return signal
-        
+
