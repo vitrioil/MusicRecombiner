@@ -37,7 +37,7 @@ class Augment:
         if not (0 <= gain < 1):
             raise ValueError(f"gain: {gain} should be in [0, 1)")
 
-        def _apply(signal: Iterable[float, float]):
+        def _apply(signal: Iterable[float]):
             length = len(signal)
             if not (start < end < length):
                 raise ValueError(f"Interval: ({start}, {end}) out of range for (0, {length})")
@@ -58,12 +58,12 @@ class Augment:
             Returns:
                 None
         """
-        audio_signal = self.signal.get(signal_name)
+        audio_signal = signal.get(signal_name)
 
         for command in self.command:
             audio_signal = command(audio_signal)
 
-        self.signal.set(signal_name, audio_signal)
+        signal.set(signal_name, audio_signal)
 
     def clear(self):
         """Clears all command.

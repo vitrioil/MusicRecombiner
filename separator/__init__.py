@@ -1,5 +1,5 @@
 from flask import Flask
-from recon.config import Config
+from separator.config import Config
 
 
 def create_config_app(config_class=Config):

@@ -1,12 +1,11 @@
-from typing import List, Iterable
+from typing import Iterable
 
 
 class Signal:
     """Signal object holds individual separated signals.
-
     """
 
-    def __init__(self, signal_names: List[str], signal: List[Iterable[float, float]]):
+    def __init__(self, signal_names: Iterable[str], signal: Iterable[Iterable[float]]):
         """
             Args:
                 signal_names (list[str]): names of individual signals.
@@ -19,7 +18,7 @@ class Signal:
 
         length = set([len(i) for i in self.signal])
         assert len(length) == 1, "All audio should be of equal length."
-        self.length = length[0]
+        self.length = length.pop()
 
         self.sig_dict = {n: s for n, s in zip(self.signal_names, self.signal)}
         self.stems = len(self.sig_dict)
@@ -36,7 +35,7 @@ class Signal:
 Perhaps used an incorrect stem? Current stem: {self.stems}""")
         return self.sig_dict.get(name)
 
-    def set(self, signal_name: str, signal: Iterable[float, float]):
+    def set(self, signal_name: str, signal: Iterable[float]):
         """Update a particular existing signal.
 
            Args:
@@ -53,11 +52,15 @@ Perhaps used an incorrect stem? Current stem: {self.stems}""")
            raise ValueError("Cannot add new signal. New signal should pre-exist.")
 
         length = len(signal)
-        if length != self.length:
+        if length != self.get_signal_length():
+            print(length, self.length)
             raise ValueError("New audio signal is not of the same duration.")
 
         self.sig_dict[signal_name] = signal
 
-    def __len__(self):
+    def get_signal_length(self):
         return self.length
+
+    def __len__(self):
+        return self.stems
 

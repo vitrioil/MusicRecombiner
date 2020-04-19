@@ -17,6 +17,6 @@ class Separator(ABC):
         pass
 
     @abstractmethod
-    def separate(self, audio_file: pathlib.Path):
+    def separate(self, audio_file: Path):
         """ abstract method to separate signal."""
 

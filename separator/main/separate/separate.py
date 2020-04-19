@@ -5,7 +5,7 @@ from spleeter.audio.adapter import get_default_audio_adapter
 
 # package import
 from separator.main import Signal
-from separator.main.base import Separator as ABCSeparator
+from separator.main.separate import Separator as ABCSeparator
 
 
 class SpleeterSeparator(ABCSeparator):
@@ -31,7 +31,7 @@ class SpleeterSeparator(ABCSeparator):
         # spleeter specific config
         self._audio_adapter = get_default_audio_adapter()
 
-    def separate(self, audio_file: pathlib.Path, sample_rate=44_100):
+    def separate(self, audio_file: Path, sample_rate=44_100):
         """Separate audio into specified stems.
 
             Note: Spleeter uses tensorflow backend. Hence, corresponding
