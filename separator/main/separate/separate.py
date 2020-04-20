@@ -1,3 +1,6 @@
+import numpy as np
+
+from typing import Union
 from pathlib import Path
 
 from spleeter.separator import Separator
@@ -31,7 +34,7 @@ class SpleeterSeparator(ABCSeparator):
         # spleeter specific config
         self._audio_adapter = get_default_audio_adapter()
 
-    def separate(self, audio_file: Path, sample_rate=44_100):
+    def separate(self, audio: Union[Path, np.ndarray], sample_rate=44_100):
         """Separate audio into specified stems.
 
             Note: Spleeter uses tensorflow backend. Hence, corresponding
@@ -49,7 +52,11 @@ class SpleeterSeparator(ABCSeparator):
                 tf.errors.ResourceExhaustedError: When memory gets exhausted.
 
         """
-        waveform, _ = self._audio_adapter.load(audio_file, sample_rate=sample_rate)
+        if isinstance(audio, np.ndarray):
+            waveform = audio
+        else:
+            waveform, _ = self._audio_adapter.load(audio, sample_rate=sample_rate)
+        print(waveform.shape)
 
         prediction = self._separator.separate(waveform)
 

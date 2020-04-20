@@ -6,7 +6,9 @@ from wtforms.validators import DataRequired
 
 
 class UploadForm(FlaskForm):
-    audio = FileField("Audio File", validators=[DataRequired(), FileAllowed(["mp3"])])
-    stems = RadioField("Stems", choices=[(2, "Vocals/Accompaniment"), (4, "Vocal/Drum/Bass/Other"), (5, "Vocal/Drum/Bass/Piano/Other")])
+    audio = FileField("Audio File", validators=[DataRequired()])
+    stems = RadioField("Stems", choices=[(2, "Vocals/Accompaniment"), (4, "Vocal/Drum/Bass/Other"), (5, "Vocal/Drum/Bass/Piano/Other")], coerce=int)
     submit = SubmitField("Upload")
 
+class AugmentForm(FlaskForm):
+    pass
