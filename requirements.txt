@@ -1,1 +1,4 @@
 spleeter
+flask
+flask-session
+flask-wtf

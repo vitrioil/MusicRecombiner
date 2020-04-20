@@ -3,4 +3,4 @@ __pycache__
 *mp3
 .cache/
 pretrained_models/
-
+flask_session/
