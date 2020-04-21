@@ -34,7 +34,7 @@ class SpleeterSeparator(ABCSeparator):
         # spleeter specific config
         self._audio_adapter = get_default_audio_adapter()
 
-    def separate(self, audio: Union[Path, np.ndarray], sample_rate=44_100):
+    def separate(self, audio: Union[str, np.ndarray], sample_rate=44_100):
         """Separate audio into specified stems.
 
             Note: Spleeter uses tensorflow backend. Hence, corresponding

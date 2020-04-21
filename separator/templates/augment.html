@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block content %}
+
+	{% for name in names %}
+		<div class="label label-primary">{{name}}</div>
+		<div id={{"waveform-"~name}} class="waveform" name={{name}} dir={{dir}}></div>
+
+		<div class="controls">
+		    <button id={{"button-"~name}} class="btn btn-primary">
+			<i class="glyphicon glyphicon-play"></i>
+			Play
+			/
+			<i class="glyphicon glyphicon-pause"></i>
+			Pause
+		    </button>
+		</div>
+
+	{% endfor %}
+
+{% endblock content %}
+
+
