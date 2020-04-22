@@ -53,16 +53,18 @@ def augment():
     elif request.method == "GET":
         audio_path = session.get("audio_path")
         separator = load_separator("spleeter", stems=session.get("stem", 5))
-        signal = separator.separate(audio_path.as_posix())
+        #signal = separator.separate(audio_path.as_posix())
+        import pickle
+        with open("signal.pkl", 'rb') as f:
+            signal = pickle.load(f)
+            
         session["signal"] = signal
 
         for name, sig in signal.get_items():
             signal_path = session["dir"] / name
             save_audio(sig, signal_path, session["audio_meta"])
-
     return render_template("augment.html", form=form, title="Augment",
                            names=signal.get_names(), dir=f"/main/data/{session['dir'].stem}")
-
 
 @main.after_request
 def after_request(response):

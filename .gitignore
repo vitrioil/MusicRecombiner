@@ -5,3 +5,5 @@ __pycache__
 pretrained_models/
 flask_session/
 data/
+*pkl
+

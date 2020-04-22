@@ -11,4 +11,4 @@ class UploadForm(FlaskForm):
     submit = SubmitField("Upload")
 
 class AugmentForm(FlaskForm):
-    pass
+    augment = RadioField("Augment", choices=[(0, "Volume"), (1, "Copy")], coerce=int)

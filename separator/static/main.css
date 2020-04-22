@@ -1,0 +1,32 @@
+.augment-form {
+	margin: 30px 0;
+	display: none;
+	opacity: 0;
+	animation: fade-out 1s;
+	display: none;
+}
+
+.form-visible {
+	opacity: 1;
+	animation: fade-in 1s;
+	display: block;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
