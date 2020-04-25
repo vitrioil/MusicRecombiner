@@ -52,12 +52,12 @@ def augment():
         pass
     elif request.method == "GET":
         audio_path = session.get("audio_path")
-        separator = load_separator("spleeter", stems=session.get("stem", 5))
+        #separator = load_separator("spleeter", stems=session.get("stem", 5))
         #signal = separator.separate(audio_path.as_posix())
         import pickle
         with open("signal.pkl", 'rb') as f:
             signal = pickle.load(f)
-            
+
         session["signal"] = signal
 
         for name, sig in signal.get_items():

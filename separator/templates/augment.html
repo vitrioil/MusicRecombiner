@@ -7,13 +7,13 @@
 		<div id={{"wave-timeline-"~name}}></div>
 
 		<div class="controls">
-		    <button id={{"button-"~name}} class="btn btn-primary">
-			<i class="glyphicon glyphicon-play"></i>
-			Play
-			/
-			<i class="glyphicon glyphicon-pause"></i>
-			Pause
-		    </button>
+			<button id={{"button-"~name}} class="btn btn-primary">
+				<i class="glyphicon glyphicon-play"></i>
+				Play
+				/
+				<i class="glyphicon glyphicon-pause"></i>
+				Pause
+			</button>
 		</div>
 
 		<div class="col-sm-3">
@@ -23,40 +23,52 @@
 		<form role="form" id={{"form-"~name}} class="augment-form">
 
 			<div class="form-group">
-			    <label for="start">Start</label>
-			    <input class="form-control" id="start" name="start" />
+				<label for={{"start-"~name}}>Start</label>
+				<input class="form-control" id={{"start-"~name}} name={{"start-"~name}} />
 			</div>
 
 			<div class="form-group">
-			    <label for="end">End</label>
-			    <input class="form-control" id="end" name="end" />
+				<label for={{"end-"~name}}>End</label>
+				<input class="form-control" id={{"end-"~name}} name={{"end-"~name}} />
 			</div>
 
-
-			<div class="form-checked">
+			<div class="form-checked augment-input" id={{"augment-input-"~name}}>
 				{% for aug in form.augment %}
-					{{ aug }}
+					{{ aug(class='augment-radio', id=aug.label.text~'-'~name) }}
 					{{ aug.label }}
 				{% endfor %}
 			</div>
 
-                	<button type="submit" class="btn btn-success btn-block">Save</button>
+			<div class="augment-form augment-form-nest-input  vol-input" id={{"augment-vol-input-"~name}}>
+				<label for={{"vol-input-slider-"~name}}>Volume</label>
+				<input id={{"vol-input-slider-"~name}} data-action="zoom" type="range" min="0" max="99" value="0" style="width: 50%"/>
+			</div>
 
+			<div class="augment-form augment-form-nest-input cop-input" id={{"augment-cop-input-"~name}}>
+				<div class="form-group">
+					<label for={{"cop-start-"~name}}>Copy Start</label>
+					<input class="form-control" id={{"cop-start-"~name}} name={{"cop-start-"~name}} />
+				</div>
 
+				<button type="button" class="btn btn-info btn-block cop-button" id={{"cop-button-"~name}}>Copy</button>
+			</div>
+
+			<button type="submit" class="btn btn-success btn-block">Save</button>
 		</form>
 
 	{% endfor %}
-	    <button id="play-all" class="btn btn-primary">
+
+	<button id="play-all" class="btn btn-primary">
 		<i class="glyphicon glyphicon-play"></i>
-		Play All
-		/
+			Play All
+			/
 		<i class="glyphicon glyphicon-pause"></i>
-		Pause All
-	    </button>
-	    <button id="stop-all" class="btn btn-primary">
+			Pause All
+	</button>
+		<button id="stop-all" class="btn btn-primary">
 		<i class="glyphicon glyphicon-stop"></i>
-		Stop All
-	    </button>
+			Stop All
+	</button>
 
 {% endblock content %}
 
