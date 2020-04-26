@@ -50,9 +50,9 @@ function setValues(wavesurfer, name) {
 						return function() {surf.zoom(this.value);}
 						})(wavesurfer);
 
-	document.querySelector("#play-all").onclick = (function(surf) {
-						return function() {surf.playPause()}
-						})(wavesurfer);
+	document.querySelector("#play-all").onclick = function() {
+		document.querySelectorAll(".btn-play-wave").forEach(btn => {btn.click()})
+	};
 
 	document.querySelector("#stop-all").onclick = (function(surf) {
 						return function() {surf.stop()}
