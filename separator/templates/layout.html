@@ -2,36 +2,34 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    {% if title %}
-        <title>Music Recombiner - {{ title }}</title>
-    {% else %}
-        <title>Music Recombiner</title>
-    {% endif %}
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	{% if title %}
+		<title>Music Recombiner - {{ title }}</title>
+	{% else %}
+		<title>Music Recombiner</title>
+	{% endif %}
 
-    <link href="https://fonts.googleapis.com/css?family=Anonymous+Pro:regular,italic,700,700italic" rel="stylesheet" />
-    
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+	<link href="https://fonts.googleapis.com/css?family=Anonymous+Pro:regular,italic,700,700italic" rel="stylesheet" />
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
 
 </head>
 
 <body>
-    <header class="site-header">
-    </header>    
+	<header class="site-header"></header>
 
-    <main role="main" class="container">
-    	{% if form.errors %}
-{{ form.errors }}
-{% endif %}
+	<main role="main" class="container">
+		{% if form and form.errors %}
+			{{ form.errors }}
+		{% endif %}
 
-    	{% block content %}{% endblock %}
+		{% block content %}{% endblock %}
 
-
-    </main> 
+	</main>
 
 </body>
 

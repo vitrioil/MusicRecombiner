@@ -6,6 +6,7 @@ from pydub import AudioSegment
 
 from werkzeug.utils import secure_filename
 
+
 class AudioMeta:
 
     def __init__(self, sample_rate, duration, channels,
@@ -43,3 +44,23 @@ def save_audio(audio, path, audio_meta):
     #audio_segment.export(path.as_posix() + audio_meta.ext, format=audio_meta.ext[1:])
     librosa.output.write_wav(path.as_posix()+".wav", np.asfortranarray(audio), sr=audio_meta.sample_rate)
 
+def augment_data(augment, signal, json, audio_metadata):
+    sample_rate = audio_metadata.sample_rate
+    stem_names = list(json.keys())
+
+    print(json)
+    for name in stem_names:
+        augment.clear()
+
+        commands = json.get(name)
+        print(name, commands)
+        for command in commands:
+            if "Volume" in command.keys():
+                param = command.get("Volume")
+                start = int(param.get("start"))
+                end = int(param.get("end"))
+                volume = int(param.get("volume")) / 100
+                augment = augment.amplitude(interval=(start, end),
+                                            gain=volume, sample_rate=sample_rate)
+        augment.augment(signal, name)
+        return signal

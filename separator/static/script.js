@@ -1,3 +1,5 @@
+localStorage.clear();
+
 document.addEventListener("DOMContentLoaded", function() {
 	addListeners();
 
@@ -48,13 +50,13 @@ function setValues(wavesurfer, name) {
 						return function() {surf.zoom(this.value);}
 						})(wavesurfer);
 
-	//document.querySelector("#play-all").onclick = (function(surf) {
-	//					return function() {surf.playPause()}
-	//					})(wavesurfer);
+	document.querySelector("#play-all").onclick = (function(surf) {
+						return function() {surf.playPause()}
+						})(wavesurfer);
 
-	//document.querySelector("#stop-all").onclick = (function(surf) {
-	//					return function() {surf.stop()}
-	//					})(wavesurfer);
+	document.querySelector("#stop-all").onclick = (function(surf) {
+						return function() {surf.stop()}
+						})(wavesurfer);
 
 	wavesurfer.on("region-click", region => {editAnnotation(region, name)});
 	wavesurfer.on("region-update-end", region => {editAnnotation(region, name)});
@@ -67,10 +69,11 @@ function setValues(wavesurfer, name) {
 		var copyStart = document.querySelector("#cop-start-"+name).value;
 		var copyEnd = Number(copyStart) + Number(document.querySelector("#end-"+name).value)
 						- Number(document.querySelector("#start-"+name).value);
+		appendStorage(name, {Copy: {start: newStart, end: newEnd, copyStart: copyStart}})
 		surf.regions.add(surf.addRegion({
 			start: copyStart,
 			end: copyEnd,
-			drag: false,
+			drag: true,
 			resize: false,
 			color: getCopyColor()
 		}))
@@ -94,12 +97,16 @@ function editAnnotation(region, name) {
 	(form.elements["end-"+name].value = Math.round(region.end * 10) / 10);
 
 	form.onsubmit = function(e) {
+		newStart = form.elements["start-"+name].value
+		newEnd = form.elements["end-"+name].value
 		e.preventDefault();
 		region.update({
-			start: form.elements["start-"+name].value,
-			end: form.elements["end-"+name].value,
+			start: newStart,
+			end: newEnd
 		});
 		form.classList.remove("form-visible");
+		newVolume = document.querySelector("#vol-input-slider-"+name).value;
+		appendStorage(name, {Volume: {start: newStart, end: newEnd, volume: newVolume}})
 	};
 
 	form.onreset = function() {
@@ -154,8 +161,41 @@ function addListeners() {
 			}
 		}})(augmentInput);
 	}
+
+	var augmentButton = document.querySelector("#augment-final-button");
+	augmentButton.onclick = sendAugmentData;
 }
 
 function getCopyColor() {
 	color = "hsla(0, 0, " + Math.random() + ", 1)";
+}
+
+function insertStorage(name, keyValue) {
+	localStorage.set(name, keyValue);
+}
+
+function appendStorage(name, keyValue) {
+	var list = localStorage.getItem(name);
+	if (list == null) {
+		localStorage.setItem(name, JSON.stringify([keyValue]));
+		return;
+	}
+	list = JSON.parse(list);
+	list.push(keyValue);
+	localStorage.setItem(name, JSON.stringify(list));
+}
+
+function sendAugmentData() {
+	var xhr = new XMLHttpRequest();
+	var jsonData = {}
+	Object.keys(localStorage).forEach(key => {
+		jsonData[key] = JSON.parse(localStorage.getItem(key));
+	});
+	jsonData = JSON.stringify(jsonData);
+
+	xhr.open('POST', '/augment');
+	xhr.setRequestHeader('Content-Type', 'application/json');
+	xhr.send(jsonData);
+
+	xhr.onreadystatechange = function() {location.href="/augment";}
 }

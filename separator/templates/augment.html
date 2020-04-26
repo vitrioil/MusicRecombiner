@@ -33,7 +33,7 @@
 			</div>
 
 			<div class="form-checked augment-input" id={{"augment-input-"~name}}>
-				{% for aug in form.augment %}
+				{% for aug in augment %}
 					{{ aug(class='augment-radio', id=aug.label.text~'-'~name) }}
 					{{ aug.label }}
 				{% endfor %}
@@ -41,7 +41,7 @@
 
 			<div class="augment-form augment-form-nest-input  vol-input" id={{"augment-vol-input-"~name}}>
 				<label for={{"vol-input-slider-"~name}}>Volume</label>
-				<input id={{"vol-input-slider-"~name}} data-action="zoom" type="range" min="0" max="99" value="0" style="width: 50%"/>
+				<input id={{"vol-input-slider-"~name}} data-action="zoom" type="range" min="0" max="100" value="100" style="width: 50%"/>
 			</div>
 
 			<div class="augment-form augment-form-nest-input cop-input" id={{"augment-cop-input-"~name}}>
@@ -57,6 +57,8 @@
 		</form>
 
 	{% endfor %}
+
+	<button type="button" class="btn btn-primary btn-block" id="augment-final-button">Augment</button>
 
 	<button id="play-all" class="btn btn-primary">
 		<i class="glyphicon glyphicon-play"></i>

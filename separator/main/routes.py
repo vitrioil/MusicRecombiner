@@ -1,5 +1,6 @@
 import uuid
 from pathlib import Path
+from pprint import pprint
 
 import numpy as np
 import soundfile as sf
@@ -13,12 +14,11 @@ from flask import Blueprint, session, redirect, url_for
 # package import
 from separator import Config
 from separator.main.augment import Augment
-from separator.main import UploadForm, AugmentForm
 from separator.main.separate import SpleeterSeparator
-from separator.main import save_audio, save_audio_from_storage
+from separator.main import UploadForm, AugmentForm, AugmentSignalForm
+from separator.main import save_audio, save_audio_from_storage, augment_data
 
 main = Blueprint(name="main", import_name=__name__)
-augment = Augment()
 
 def load_separator(separator_name: str, *args, **kwargs):
 
@@ -47,24 +47,38 @@ def home():
 
 @main.route("/augment", methods=["GET", "POST"])
 def augment():
-    form = AugmentForm()
-    if form.validate_on_submit():
-        pass
-    elif request.method == "GET":
-        audio_path = session.get("audio_path")
-        #separator = load_separator("spleeter", stems=session.get("stem", 5))
-        #signal = separator.separate(audio_path.as_posix())
-        import pickle
-        with open("signal.pkl", 'rb') as f:
-            signal = pickle.load(f)
-
-        session["signal"] = signal
-
+    def _save_all(signal):
         for name, sig in signal.get_items():
             signal_path = session["dir"] / name
             save_audio(sig, signal_path, session["audio_meta"])
-    return render_template("augment.html", form=form, title="Augment",
-                           names=signal.get_names(), dir=f"/main/data/{session['dir'].stem}")
+
+    if request.method == "POST":
+        json_data = request.get_json()
+
+        signal = session["signal"]
+        signal = augment_data(Augment(), signal, json_data, session["audio_meta"])
+
+        _save_all(signal)
+        session["signal"] = signal
+        return redirect(url_for("main.augment"))
+
+    elif request.method == "GET":
+
+        if session.get("signal") is None:
+            audio_path = session.get("audio_path")
+            #separator = load_separator("spleeter", stems=session.get("stem", 5))
+            #signal = separator.separate(audio_path.as_posix())
+            import pickle
+            with open("signal.pkl", 'rb') as f:
+                signal = pickle.load(f)
+            session["signal"] = signal
+
+        signal = session["signal"]
+        _save_all(signal)
+
+    return render_template("augment.html", title="Augment",
+                           names=signal.get_names(), dir=f"/main/data/{session['dir'].stem}",
+                           augment=AugmentSignalForm().augment)
 
 @main.after_request
 def after_request(response):
