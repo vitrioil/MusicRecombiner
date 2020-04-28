@@ -1,3 +1,6 @@
 #!/bin/bash
 
-sudo docker run --gpus all -it --rm -v /home/vitrioil:/home/vitrioil --name spleeter_dev tensorflow/tensorflow:1.15.2-gpu-py3
+username=$(whoami)
+read -p "Docker image name:" image_name
+echo $username
+sudo docker run --gpus all -it --rm -v /home/$username:/home/$username --name spleeter_dev $image_name

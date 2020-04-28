@@ -23,9 +23,19 @@ class Augment:
     def _preprocess_interval(self, interval, sample_rate):
         interval = map(lambda x: int(x*sample_rate), interval)
         start, end = tuple(interval)
-        end -= 1
         return start, end
 
+    def _bound_check(self, start, end, length):
+        if start < 0:
+            start = 0
+        if end >= length:
+            end = length - 1
+        return start, end
+
+    def _interval_check(self, signal, start, end):
+        length = len(signal)
+        start, end = self._bound_check(start, end, length)
+        return start, end, length
 
     def amplitude(self, interval: Tuple[float, float], gain: float, sample_rate: int):
         """Change amplitude of the signal.
@@ -44,7 +54,8 @@ class Augment:
             raise ValueError(f"gain: {gain} should be in [0, 1]")
 
         def _apply(signal: Iterable[float]):
-            length = len(signal)
+            nonlocal start, end
+            start, end, length = self._interval_check(signal, start, end)
             if not (start < end < length):
                 raise ValueError(f"Interval: ({start}, {end}) out of range for (0, {length})")
 
@@ -71,7 +82,9 @@ class Augment:
         copy_start, copy_end = self._preprocess_interval((copy_start, copy_end), sample_rate)
 
         def _apply(signal: Iterable[float]):
-            length = len(signal)
+            nonlocal start, end, copy_start, copy_end
+            start, end, length = self._interval_check(signal, start, end)
+            copy_start, copy_end = self._bound_check(copy_start, copy_end, length)
             if not (start < end < length) or not (copy_start < copy_end < length):
                 raise ValueError(f"Interval: ({start}, {end}) or ({copy_start}, {copy_end}) out of range for (0, {length})")
 

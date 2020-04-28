@@ -58,10 +58,10 @@ def augment_data(augment, signal, json, audio_metadata):
         print(name, commands)
         for command in commands:
             if "Volume" in command.keys():
-                param = command.get("Volume")
+                param = command.get("Volume", {})
                 start = float(param.get("start"))
                 end = float(param.get("end"))
-                volume = int(param.get("volume")) / 100
+                volume = int(param.get("volume"), 100) / 100
                 if volume == 1:
                     continue
                 augment = augment.amplitude(interval=(start, end),
