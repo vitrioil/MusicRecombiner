@@ -14,6 +14,11 @@
 				<i class="glyphicon glyphicon-pause"></i>
 				Pause
 			</button>
+
+			<button id={{"button-stop-"~name}} class="btn btn-primary btn-stop-wave">
+				<i class="glyphicon glyphicon-stop"></i>
+				Stop
+			</button>
 		</div>
 
 		<div class="col-sm-3">
@@ -71,6 +76,7 @@
 		<i class="glyphicon glyphicon-stop"></i>
 			Stop All
 	</button>
+	<button type="button" class="btn btn-danger" id="reload-original">Load Original</button>
 
 {% endblock content %}
 

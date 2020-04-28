@@ -1,3 +1,4 @@
+import json
 import uuid
 from pathlib import Path
 from pprint import pprint
@@ -47,37 +48,46 @@ def home():
 
 @main.route("/augment", methods=["GET", "POST"])
 def augment():
-    def _save_all(signal):
+    def _save_all(signal, augmented=False):
+        augment_str = "_augmented" if augmented else ''
         for name, sig in signal.get_items():
-            signal_path = session["dir"] / name
+            signal_path = session["dir"] / (name + augment_str)
             save_audio(sig, signal_path, session["audio_meta"])
+
+    load_augment = json.loads(request.args.get("augment", 'true').lower())
 
     if request.method == "POST":
         json_data = request.get_json()
 
-        signal = session["signal"]
+        signal = session.get("signal_augmented", session["signal"])
         signal = augment_data(Augment(), signal, json_data, session["audio_meta"])
 
-        _save_all(signal)
-        session["signal"] = signal
+        _save_all(signal, augmented=True)
+        session["signal_augmented"] = signal
         return redirect(url_for("main.augment"))
 
     elif request.method == "GET":
+        session_signal_name = "signal"
 
         if session.get("signal") is None:
             audio_path = session.get("audio_path")
-            separator = load_separator("spleeter", stems=session.get("stem", 5))
+            separator = load_separator("spleeter", stems=session.get("stem", 2))
             signal = separator.separate(audio_path.as_posix())
             #import pickle
             #with open("signal.pkl", 'rb') as f:
             #    signal = pickle.load(f)
             session["signal"] = signal
+            _save_all(signal)
+        elif load_augment:
+            session_signal_name += "_augmented"
 
-        signal = session["signal"]
-        _save_all(signal)
+        signal = session.get(session_signal_name)
+        names = signal.get_names()
+        if "signal_augmented" in session and load_augment:
+            names = [f"{n}_augmented" for n in names]
 
     return render_template("augment.html", title="Augment",
-                           names=signal.get_names(), dir=f"/main/data/{session['dir'].stem}",
+                           names=names, dir=f"/main/data/{session['dir'].stem}",
                            augment=AugmentSignalForm().augment)
 
 @main.after_request

@@ -20,22 +20,28 @@ class Augment:
     def __init__(self):
         self.command = []
 
-    def amplitude(self, interval: Tuple[int, int], gain: float, sample_rate: int):
+    def _preprocess_interval(self, interval, sample_rate):
+        interval = map(lambda x: int(x*sample_rate), interval)
+        start, end = tuple(interval)
+        end -= 1
+        return start, end
+
+
+    def amplitude(self, interval: Tuple[float, float], gain: float, sample_rate: int):
         """Change amplitude of the signal.
 
             Args:
-                interval tuple(int, int): time interval to modify.
+                interval tuple(float, float): time interval to modify.
                 gain (float): (1>gain>0) float to indicate volume change.
                 sample_rate (int): sampling rate of audio.
 
             Returns:
                 self.
         """
-        interval = map(lambda x: x*sample_rate, interval)
-        start, end = tuple(interval)
+        start, end = self._preprocess_interval(interval, sample_rate)
 
-        if not (0 <= gain < 1):
-            raise ValueError(f"gain: {gain} should be in [0, 1)")
+        if not (0 <= gain <= 1):
+            raise ValueError(f"gain: {gain} should be in [0, 1]")
 
         def _apply(signal: Iterable[float]):
             length = len(signal)
@@ -43,6 +49,33 @@ class Augment:
                 raise ValueError(f"Interval: ({start}, {end}) out of range for (0, {length})")
 
             signal[start: end] *= gain
+            return signal
+
+        self.command.append(_apply)
+        return self
+
+    def copy(self, interval: Tuple[float, float], copy_start: float, sample_rate: int):
+        """Copy a signal in the interval to a new location.
+
+            Args:
+                interval tuple(float, float): time interval to copy.
+                copy_start float: new location start.
+
+            Returns:
+                self.
+        """
+        start, end = interval
+        copy_end = copy_start + (end - start)
+
+        start, end = self._preprocess_interval((start, end), sample_rate)
+        copy_start, copy_end = self._preprocess_interval((copy_start, copy_end), sample_rate)
+
+        def _apply(signal: Iterable[float]):
+            length = len(signal)
+            if not (start < end < length) or not (copy_start < copy_end < length):
+                raise ValueError(f"Interval: ({start}, {end}) or ({copy_start}, {copy_end}) out of range for (0, {length})")
+
+            signal[copy_start: copy_end] = signal[start: end]
             return signal
 
         self.command.append(_apply)

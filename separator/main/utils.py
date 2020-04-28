@@ -46,10 +46,12 @@ def save_audio(audio, path, audio_meta):
 
 def augment_data(augment, signal, json, audio_metadata):
     sample_rate = audio_metadata.sample_rate
+    duration = audio_metadata.duration
     stem_names = list(json.keys())
 
     print(json)
     for name in stem_names:
+        name = name.replace("_augmented", '')
         augment.clear()
 
         commands = json.get(name)
@@ -57,10 +59,21 @@ def augment_data(augment, signal, json, audio_metadata):
         for command in commands:
             if "Volume" in command.keys():
                 param = command.get("Volume")
-                start = int(param.get("start"))
-                end = int(param.get("end"))
+                start = float(param.get("start"))
+                end = float(param.get("end"))
                 volume = int(param.get("volume")) / 100
+                if volume == 1:
+                    continue
                 augment = augment.amplitude(interval=(start, end),
                                             gain=volume, sample_rate=sample_rate)
+
+            elif "Copy" in command.keys():
+                param = command.get("Copy")
+                start = float(param.get("start"))
+                end = float(param.get("end"))
+                copy_start = float(param.get("copyStart"))
+                augment = augment.copy(interval=(start, end), copy_start=copy_start,
+                                       sample_rate=sample_rate)
+
         augment.augment(signal, name)
-        return signal
+    return signal

@@ -46,6 +46,10 @@ function setValues(wavesurfer, name) {
 						return function() {surf.playPause()}
 						})(wavesurfer);
 
+	document.querySelector("#button-stop-" + name).onclick = (function(surf) {
+						return function() {surf.stop()}
+						})(wavesurfer);
+
 	document.querySelector("#slider-"+name).oninput = (function(surf) {
 						return function() {surf.zoom(this.value);}
 						})(wavesurfer);
@@ -54,9 +58,9 @@ function setValues(wavesurfer, name) {
 		document.querySelectorAll(".btn-play-wave").forEach(btn => {btn.click()})
 	};
 
-	document.querySelector("#stop-all").onclick = (function(surf) {
-						return function() {surf.stop()}
-						})(wavesurfer);
+	document.querySelector("#stop-all").onclick = function() {
+		document.querySelectorAll(".btn-stop-wave").forEach(btn => {btn.click()})
+	};
 
 	wavesurfer.on("region-click", region => {editAnnotation(region, name)});
 	wavesurfer.on("region-update-end", region => {editAnnotation(region, name)});
@@ -66,14 +70,15 @@ function setValues(wavesurfer, name) {
 	var cButton = document.querySelector("#cop-button-"+name);
 	cButton.onclick = (function(surf) {
 		return function() {
+		var oldStart = Number(document.querySelector("#start-"+name).value);
+		var oldEnd = Number(document.querySelector("#end-"+name).value);
 		var copyStart = document.querySelector("#cop-start-"+name).value;
-		var copyEnd = Number(copyStart) + Number(document.querySelector("#end-"+name).value)
-						- Number(document.querySelector("#start-"+name).value);
-		appendStorage(name, {Copy: {start: newStart, end: newEnd, copyStart: copyStart}})
+		var copyEnd = Number(copyStart) + oldEnd - oldStart
+		appendStorage(name, {Copy: {start: oldStart, end: oldEnd, copyStart: copyStart}})
 		surf.regions.add(surf.addRegion({
 			start: copyStart,
 			end: copyEnd,
-			drag: true,
+			drag: false,
 			resize: false,
 			color: getCopyColor()
 		}))
@@ -164,6 +169,9 @@ function addListeners() {
 
 	var augmentButton = document.querySelector("#augment-final-button");
 	augmentButton.onclick = sendAugmentData;
+
+	var loadOriginalButton = document.querySelector("#reload-original");
+	loadOriginalButton.onclick = loadOriginal;
 }
 
 function getCopyColor() {
@@ -198,4 +206,19 @@ function sendAugmentData() {
 	xhr.send(jsonData);
 
 	xhr.onreadystatechange = function() {location.href="/augment";}
+}
+
+function loadOriginal() {
+	const target = new URL(location.href);
+	const params = new URLSearchParams();
+
+	params.set("augment", false);
+	target.search = params.toString();
+
+	var xhr = new XMLHttpRequest();
+
+	xhr.open('GET', target.href);
+	xhr.onreadystatechange = function() {location.href=target.href;}
+	xhr.send(null);
+
 }

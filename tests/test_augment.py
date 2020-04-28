@@ -52,3 +52,23 @@ def test_amplitude():
     with pytest.raises(ValueError) as pe:
         augment.amplitude((3, 4), 0, 100)
         augment.augment(dummy_signal, "test")
+
+def test_copy():
+    augment = Augment()
+
+    augment.copy((2, 3), 4, 1)
+    augment.augment(dummy_signal, "test")
+
+    audio = dummy_signal.get("test")
+    assert audio[2: 3] == audio[4: 5]
+
+    augment.clear()
+    with pytest.raises(ValueError) as pe:
+        augment.copy((2, 300), 4, 1)
+        augment.augment(dummy_signal, "test")
+
+        augment.clear()
+        augment.copy((2, 3), 400, 1)
+        augment.augment(dummy_signal, "test")
+    
+

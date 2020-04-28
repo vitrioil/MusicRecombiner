@@ -63,10 +63,10 @@ Perhaps used an incorrect stem? Current stem: {self.stems}""")
 
     def get_names(self):
         return list(self.sig_dict.keys())
-    
+
     def get_items(self):
         yield from self.sig_dict.items()
-    
+
     def __len__(self):
         return self.stems
 
