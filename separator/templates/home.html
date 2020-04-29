@@ -1,24 +1,49 @@
 {% extends "layout.html" %}
 {% block content %}
-    	<form method="POST" enctype="multipart/form-data">
-		
+	<form method="POST" enctype="multipart/form-data" class="ctr-cnt">
+
 		{{ form.csrf_token }}
+		<div class="card">
+			<header class="card-header">
+				{{ form.audio.label(class="card-header-title jty-ctr") }}
+			</header>
+			<div class="card-content">
+				<div class="field">
+					<div class="file is-info has-name jty-ctr" id="file-input-upload">
+						<label class="file-label">
+							{{ form.audio(class="file-input") }}
+							<span class="file-cta">
+								<span class="file-icon">
+									<i class="fas fa-upload"></i>
+								</span>
+								<span class="file-label">
+									Upload
+								</span>
+							</span>
+							<span class="file-name">
+								Music File
+							</span>
+						</label>
+					</div>
+				</div>
 
-		<div class="form-group">
-			{{ form.audio.label() }}
-			{{ form.audio(class="form-control-file") }}
+				<div class="field columns">
+					{% for subfield in form.stems %}
+						<div class="column">
+							{{ subfield }}
+							{{ subfield.label(class="is-size-6") }}
+						</div>
+					{% endfor %}
+				</div>
+
+			</div>
+
+			<footer class="card-footer">
+				<div class="field card-footer-item">
+					{{ form.submit(class="button is-info is-light") }}
+				</div>
+			</footer>
 		</div>
-
-		<div class="form-checked">
-			{% for subfield in form.stems %}
-			    {{ subfield }}
-			    {{ subfield.label }}<br>
-			{% endfor %}
-		</div>
-
-		<div class="form-group">
-			{{ form.submit(class="btn btn-outline-info") }}
-		</div>
-
 	</form>
 {% endblock content %}
+

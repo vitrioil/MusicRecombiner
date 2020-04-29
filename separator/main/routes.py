@@ -71,17 +71,17 @@ def augment():
 
         if session.get("signal") is None:
             audio_path = session.get("audio_path")
-            separator = load_separator("spleeter", stems=session.get("stem", 2))
-            signal = separator.separate(audio_path.as_posix())
-            #import pickle
-            #with open("signal.pkl", 'rb') as f:
-            #    signal = pickle.load(f)
+            #separator = load_separator("spleeter", stems=session.get("stem", 2))
+            #signal = separator.separate(audio_path.as_posix())
+            import pickle
+            with open("signal.pkl", 'rb') as f:
+                signal = pickle.load(f)
             session["signal"] = signal
             _save_all(signal)
         elif load_augment:
             session_signal_name += "_augmented"
 
-        signal = session.get(session_signal_name)
+        signal = session.get(session_signal_name, session.get("signal"))
         names = signal.get_names()
         if "signal_augmented" in session and load_augment:
             names = [f"{n}_augmented" for n in names]

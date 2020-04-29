@@ -96,7 +96,8 @@ function enableVolumeForm(form) {
 
 function editAnnotation(region, name) {
 	var form = document.querySelector("#form-"+name)
-	form.classList.add("form-visible");
+	form.classList.add("form-visible-flex");
+	form.classList.add("tile");
 
 	(form.elements["start-"+name].value = Math.round(region.start * 10) / 10),
 	(form.elements["end-"+name].value = Math.round(region.end * 10) / 10);
@@ -109,7 +110,8 @@ function editAnnotation(region, name) {
 			start: newStart,
 			end: newEnd
 		});
-		form.classList.remove("form-visible");
+		form.classList.remove("form-visible-flex");
+		form.classList.remove("tile");
 		newVolume = document.querySelector("#vol-input-slider-"+name).value;
 		appendStorage(name, {Volume: {start: newStart, end: newEnd, volume: newVolume}})
 	};
@@ -123,6 +125,16 @@ function editAnnotation(region, name) {
 }
 
 function addListeners() {
+	const fileInput = document.querySelector('#file-input-upload input[type=file]');
+	if(fileInput != null) {
+		fileInput.onchange = () => {
+			if (fileInput.files.length > 0) {
+				const fileName = document.querySelector('#file-input-upload .file-name');
+				fileName.textContent = fileInput.files[0].name;
+			}
+		}
+	}
+
 	var volume_button = document.querySelector("#radio-Volume");
 	var copy_button = document.querySelector("#radio-Copy");
 
@@ -136,10 +148,9 @@ function addListeners() {
 
 	function enableAugment(form) {
 		document.querySelectorAll(".augment-form-nest-input").forEach(
-			(item) => {item.classList.remove("form-visible")}
+			(item) => {item.classList.remove("form-visible-flex")}
 		);
-		console.log(form);
-		form.classList.add("form-visible");
+		form.classList.add("form-visible-flex");
 	}
 
 	var allAugmentInputs = document.querySelectorAll(".augment-input");

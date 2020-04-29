@@ -1,13 +1,19 @@
 {% extends "layout.html" %}
 {% block content %}
 
+<div class="column tile is-vertical">
 	{% for name in names %}
-		<div class="label label-primary">{{name}}</div>
-		<div id={{"waveform-"~name}} class="waveform" name={{name}} dir={{dir}}></div>
-		<div id={{"wave-timeline-"~name}}></div>
 
-		<div class="controls">
-			<button id={{"button-"~name}} class="btn btn-primary btn-play-wave">
+		<div class="tile is-block">{{name}}</div>
+
+		<div id={{"waveform-"~name}} class="tile is-block waveform m-5 p-3" name={{name}} dir={{dir}}></div>
+		<div id={{"wave-timeline-"~name}} class="tile is-block m-5 p-3"></div>
+		<div class="tile is-flex jty-ctr m-10 p-3">
+			<input id={{"slider-"~name}} data-action="zoom" type="range" min="1" max="200" value="0"/>
+		</div>
+
+		<div class="tile columns is-centered">
+			<button id={{"button-"~name}} class="button is-primary column is-3 is-block m-5 p-3">
 				<i class="glyphicon glyphicon-play"></i>
 				Play
 				/
@@ -15,68 +21,73 @@
 				Pause
 			</button>
 
-			<button id={{"button-stop-"~name}} class="btn btn-primary btn-stop-wave">
+			<button id={{"button-stop-"~name}} class="button is-primary column is-3 is-block m-5 p-3">
 				<i class="glyphicon glyphicon-stop"></i>
 				Stop
 			</button>
 		</div>
 
-		<div class="col-sm-3">
-			<input id={{"slider-"~name}} data-action="zoom" type="range" min="1" max="200" value="0" style="width: 100%"/>
-		</div>
-
 		<form role="form" id={{"form-"~name}} class="augment-form">
 
-			<div class="form-group">
+			<div class="field">
 				<label for={{"start-"~name}}>Start</label>
-				<input class="form-control" id={{"start-"~name}} name={{"start-"~name}} />
+				<input class="input" id={{"start-"~name}} name={{"start-"~name}} />
 			</div>
 
-			<div class="form-group">
+			<div class="field">
 				<label for={{"end-"~name}}>End</label>
-				<input class="form-control" id={{"end-"~name}} name={{"end-"~name}} />
+				<input class="input" id={{"end-"~name}} name={{"end-"~name}} />
 			</div>
 
-			<div class="form-checked augment-input" id={{"augment-input-"~name}}>
+			<div class="field augment-input" id={{"augment-input-"~name}}>
 				{% for aug in augment %}
 					{{ aug(class='augment-radio', id=aug.label.text~'-'~name) }}
 					{{ aug.label }}
 				{% endfor %}
 			</div>
 
-			<div class="augment-form augment-form-nest-input  vol-input" id={{"augment-vol-input-"~name}}>
+			<div class="augment-form augment-form-nest-input vol-input" id={{"augment-vol-input-"~name}}>
 				<label for={{"vol-input-slider-"~name}}>Volume</label>
 				<input id={{"vol-input-slider-"~name}} data-action="zoom" type="range" min="0" max="100" value="100" style="width: 50%"/>
 			</div>
 
 			<div class="augment-form augment-form-nest-input cop-input" id={{"augment-cop-input-"~name}}>
-				<div class="form-group">
+				<div class="field">
 					<label for={{"cop-start-"~name}}>Copy Start</label>
-					<input class="form-control" id={{"cop-start-"~name}} name={{"cop-start-"~name}} />
+					<input class="field" id={{"cop-start-"~name}} name={{"cop-start-"~name}} />
 				</div>
 
-				<button type="button" class="btn btn-info btn-block cop-button" id={{"cop-button-"~name}}>Copy</button>
+				<button type="button" class="button is-info is-block cop-button" id={{"cop-button-"~name}}>Copy</button>
 			</div>
 
-			<button type="submit" class="btn btn-success btn-block">Save</button>
+			<button type="submit" class="button is-success is-block">Save</button>
 		</form>
 
 	{% endfor %}
 
-	<button type="button" class="btn btn-primary btn-block" id="augment-final-button">Augment</button>
+	<div class="tile columns is-centered">
+		<button id="play-all" class="column button is-primary is-block is-3 m-5 p-3">
+			<i class="glyphicon glyphicon-play"></i>
+				Play All
+				/
+			<i class="glyphicon glyphicon-pause"></i>
+				Pause All
+		</button>
 
-	<button id="play-all" class="btn btn-primary">
-		<i class="glyphicon glyphicon-play"></i>
-			Play All
-			/
-		<i class="glyphicon glyphicon-pause"></i>
-			Pause All
-	</button>
-		<button id="stop-all" class="btn btn-primary">
-		<i class="glyphicon glyphicon-stop"></i>
-			Stop All
-	</button>
-	<button type="button" class="btn btn-danger" id="reload-original">Load Original</button>
+		<button id="stop-all" class="column button is-primary is-block is-3 m-5 p-3">
+			<i class="glyphicon glyphicon-stop"></i>
+				Stop All
+		</button>
+
+	</div>
+
+	<div class="tile columns is-centered">
+		<button type="button" class="column button is-primary is-block m-10 p-3 is-3" id="augment-final-button">Augment</button>
+		<button type="button" class="column button is-danger is-block m-10 p-3 is-3" id="reload-original">Load Original</button>
+	</div>
+
+</div>
+
 
 {% endblock content %}
 
