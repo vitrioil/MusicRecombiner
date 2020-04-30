@@ -51,8 +51,8 @@ def augment_data(augment, signal, json, audio_metadata):
 
     print(json)
     for name in stem_names:
-        name = name.replace("_augmented", '')
         augment.clear()
+        signal_base_name = name.replace("_augmented", '')
 
         commands = json.get(name)
         print(name, commands)
@@ -61,7 +61,7 @@ def augment_data(augment, signal, json, audio_metadata):
                 param = command.get("Volume", {})
                 start = float(param.get("start"))
                 end = float(param.get("end"))
-                volume = int(param.get("volume"), 100) / 100
+                volume = int(param.get("volume", 100)) / 100
                 if volume == 1:
                     continue
                 augment = augment.amplitude(interval=(start, end),
@@ -75,5 +75,5 @@ def augment_data(augment, signal, json, audio_metadata):
                 augment = augment.copy(interval=(start, end), copy_start=copy_start,
                                        sample_rate=sample_rate)
 
-        augment.augment(signal, name)
+        augment.augment(signal, signal_base_name)
     return signal

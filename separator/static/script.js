@@ -55,11 +55,11 @@ function setValues(wavesurfer, name) {
 						})(wavesurfer);
 
 	document.querySelector("#play-all").onclick = function() {
-		document.querySelectorAll(".btn-play-wave").forEach(btn => {btn.click()})
+		document.querySelectorAll(".button-play-wave").forEach(btn => {btn.click()})
 	};
 
 	document.querySelector("#stop-all").onclick = function() {
-		document.querySelectorAll(".btn-stop-wave").forEach(btn => {btn.click()})
+		document.querySelectorAll(".button-stop-wave").forEach(btn => {btn.click()})
 	};
 
 	wavesurfer.on("region-click", region => {editAnnotation(region, name)});
@@ -68,21 +68,23 @@ function setValues(wavesurfer, name) {
 	var copyForm = document.querySelectorAll("#augment-cop-input-"+name);
 
 	var cButton = document.querySelector("#cop-button-"+name);
-	cButton.onclick = (function(surf) {
-		return function() {
-		var oldStart = Number(document.querySelector("#start-"+name).value);
-		var oldEnd = Number(document.querySelector("#end-"+name).value);
-		var copyStart = document.querySelector("#cop-start-"+name).value;
-		var copyEnd = Number(copyStart) + oldEnd - oldStart
-		appendStorage(name, {Copy: {start: oldStart, end: oldEnd, copyStart: copyStart}})
-		surf.regions.add(surf.addRegion({
-			start: copyStart,
-			end: copyEnd,
-			drag: false,
-			resize: false,
-			color: getCopyColor()
-		}))
-	}})(wavesurfer);
+	if (cButton != null) {
+		cButton.onclick = (function(surf) {
+			return function() {
+			var oldStart = Number(document.querySelector("#start-"+name).value);
+			var oldEnd = Number(document.querySelector("#end-"+name).value);
+			var copyStart = document.querySelector("#cop-start-"+name).value;
+			var copyEnd = Number(copyStart) + oldEnd - oldStart
+			appendStorage(name, {Copy: {start: oldStart, end: oldEnd, copyStart: copyStart}})
+			surf.regions.add(surf.addRegion({
+				start: copyStart,
+				end: copyEnd,
+				drag: false,
+				resize: false,
+				color: getCopyColor()
+			}))
+		}})(wavesurfer);
+	}
 }
 
 function enableVolumeForm(form) {
@@ -97,7 +99,7 @@ function enableVolumeForm(form) {
 function editAnnotation(region, name) {
 	var form = document.querySelector("#form-"+name)
 	form.classList.add("form-visible-flex");
-	form.classList.add("tile");
+	//form.classList.add("tile");
 
 	(form.elements["start-"+name].value = Math.round(region.start * 10) / 10),
 	(form.elements["end-"+name].value = Math.round(region.end * 10) / 10);
@@ -111,7 +113,7 @@ function editAnnotation(region, name) {
 			end: newEnd
 		});
 		form.classList.remove("form-visible-flex");
-		form.classList.remove("tile");
+		//form.classList.remove("tile");
 		newVolume = document.querySelector("#vol-input-slider-"+name).value;
 		appendStorage(name, {Volume: {start: newStart, end: newEnd, volume: newVolume}})
 	};
@@ -148,9 +150,9 @@ function addListeners() {
 
 	function enableAugment(form) {
 		document.querySelectorAll(".augment-form-nest-input").forEach(
-			(item) => {item.classList.remove("form-visible-flex")}
+			(item) => {item.classList.remove("form-visible")}
 		);
-		form.classList.add("form-visible-flex");
+		form.classList.add("form-visible");
 	}
 
 	var allAugmentInputs = document.querySelectorAll(".augment-input");
@@ -165,13 +167,13 @@ function addListeners() {
 			var allButton = document.querySelectorAll("#"+curId+" .augment-radio");
 			console.log(curId, name);
 			for(button of allButton) {
-				//console.log(button);
+				console.log(button);
 				button.onclick = (function(scopeButton) {
 					return function() {
 					var buttonText = scopeButton.getAttribute("id").split('-')[0];
 					var cmd = buttonText.toLowerCase().slice(0, 3);
 					var form = document.querySelector("#augment-"+cmd+"-input-"+name);
-					//console.log(buttonText, cmd, form);
+					console.log(buttonText, cmd, form);
 					enableAugment(form);
 				}})(button);
 			}
