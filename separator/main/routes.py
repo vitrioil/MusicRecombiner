@@ -59,6 +59,7 @@ def augment():
     if request.method == "POST":
         json_data = request.get_json()
 
+        print(session.get("signal_augmented"), " augmented signal")
         signal = session.get("signal_augmented", session["signal"])
         signal = augment_data(Augment(), signal, json_data, session["audio_meta"])
 
@@ -71,15 +72,18 @@ def augment():
 
         if session.get("signal") is None:
             audio_path = session.get("audio_path")
-            #separator = load_separator("spleeter", stems=session.get("stem", 2))
-            #signal = separator.separate(audio_path.as_posix())
-            import pickle
-            with open("signal.pkl", 'rb') as f:
-                signal = pickle.load(f)
+            separator = load_separator("spleeter", stems=session.get("stem", 2))
+            signal = separator.separate(audio_path.as_posix())
+            #import pickle
+            #with open("signal.pkl", 'rb') as f:
+            #    signal = pickle.load(f)
             session["signal"] = signal
             _save_all(signal)
         elif load_augment:
             session_signal_name += "_augmented"
+        else:
+            print("POPPING AUGMENTED")
+            session.pop("signal_augmented", None)
 
         signal = session.get(session_signal_name, session.get("signal"))
         names = signal.get_names()

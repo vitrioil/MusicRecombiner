@@ -62,63 +62,64 @@
 			</div>
 
 			<button type="submit" class="button is-success is-block">Save</button>-->
-			<nav class="level">
-				<div class="level-left">
-					<div class="level-item">
-						<div class="field has-addons">
-							<p class="control subtitle is-5">Start</p>
-							<div class="control">
-								<input class="input" id={{"start-"~name}} name={{"start-"~name}} />
-							</div>
-							<p class="control subtitle is-5">End</p>
-							<div class="control">
-								<input class="input" id={{"end-"~name}} name={{"end-"~name}} />
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<div class="level-right">
-					<div class="level-item">
-						<div class="field has-addons augment-input" id={{"augment-input-"~name}}>
-							{% for aug in augment %}
+			<div class="tile is-vertical jty-ctr">
+				<nav class="tile level" style="width: 50%;">
+					<div class="level-left">
+						<div class="level-item">
+							<div class="field has-addons">
+								<p class="control subtitle is-5">Start</p>
 								<div class="control">
-									<button type="button" class="button is-info augment-radio" id={{aug.label.text~'-'~name}}>
-										{{ aug.label }}
-									</button>
+									<input class="input" id={{"start-"~name}} name={{"start-"~name}} />
 								</div>
-							{% endfor %}
-							<div class="control">
-							<button type="button" class="button is-primary">Add</button>
-							</div>
-
-							<div class="control">
-							<button type="submit" class="button is-success">Save</button>
+								<p class="control subtitle is-5">End</p>
+								<div class="control">
+									<input class="input" id={{"end-"~name}} name={{"end-"~name}} />
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
-			</nav>
 
-			<nav class="level augment-form augment-form-nest-input vol-input" id={{"augment-vol-input-"~name}}>
-				<div class="control level-item">
-					<input id={{"vol-input-slider-"~name}} data-action="zoom" type="range" min="0" max="100" value="100" style="width: 50%"/>
-				</div>
-			</nav>
-			<nav class="level augment-form augment-form-nest-input cop-input" id={{"augment-cop-input-"~name}}>
-				<div class="control level-item">
-					<p class="subtitle is-5">Copy Start</p>
-				</div>
+					<div class="level-right">
+						<div class="level-item">
+							<div class="field has-addons augment-input" id={{"augment-input-"~name}}>
+								{% for aug in augment %}
+									<div class="control">
+										<button type="button" class="button is-info augment-radio" id={{aug.label.text~'-'~name}}>
+											{{ aug.label }}
+										</button>
+									</div>
+								{% endfor %}
+								<div class="control">
+									<button type="button" class="button is-primary" id={{"add-command-"~name}}>Add</button>
+								</div>
 
-				<div class="control level-item">
-					<input class="field" id={{"cop-start-"~name}} name={{"cop-start-"~name}} />
-				</div>
+								<div class="control">
+									<button type="submit" class="button is-success">Save</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</nav>
 
-				<div class="control level-item">
-					<button type="button" class="button is-info is-block cop-button" id={{"cop-button-"~name}}>Copy</button>
-				</div>
+				<div class="tile">
+					<nav class="level augment-form augment-form-nest-input vol-input" id={{"augment-vol-input-"~name}}>
+						<div class="control level-item">
+							<input id={{"vol-input-slider-"~name}} data-action="zoom" type="range" min="0" max="100" value="100" style="width: 50%"/>
+						</div>
+					</nav>
 
-			</nav>
+					<nav class="level augment-form augment-form-nest-input cop-input" id={{"augment-cop-input-"~name}}>
+						<div class="control level-item">
+							<p class="subtitle is-5">Copy Start</p>
+						</div>
+
+						<div class="control level-item">
+							<input class="field" id={{"cop-start-"~name}} name={{"cop-start-"~name}} />
+						</div>
+
+					</nav>
+				</div>
+			</div>
 		</form>
 
 	{% endfor %}

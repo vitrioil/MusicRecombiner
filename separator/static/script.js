@@ -1,3 +1,144 @@
+class CommandStore {
+
+	static customStorage = {};
+
+	static addCommand(name, jsonObject) {
+		var commandName = jsonObject["commandName"]
+		var keyValue = jsonObject[name]
+		this.appendStorage(name, commandName, keyValue);
+	}
+
+	static initStorage(name) {
+		//this.setObject(localStorage, name, {});
+		this.customStorage[name] = {};
+	}
+
+	static appendObject(driverObject, key, value) {
+		var list = this.getObject(driverObject, key);
+		list.push(value);
+		driverObject.setItem(key, list);
+	}
+
+	static setObject(driverObject, key, value) {
+		driverObject.setItem(key, value);
+	}
+
+	static getObject(driverObject, key) {
+		if (typeof driverObject.getItem === "function" && typeof driverObject.getItem(key) != "undefined") {
+			return driverObject.getItem(key);
+		} else if(typeof driverObject[key] != "undefined") {
+			return driverObject[key];
+		}
+		return null;
+	}
+
+	static appendStorage(name, commandName, keyValue) {
+		var nameList = this.getObject(this.customStorage, name);
+		var commandList = this.getObject(nameList, commandName);
+
+		if (commandList == null) {
+			commandList = [];
+		}
+
+		commandList.push(keyValue);
+		this.customStorage[name][commandName] = commandList;
+	}
+
+}
+
+function printStorage() {
+	console.log(CommandStore.customStorage);
+}
+
+class Command {
+	constructor(wavesurfer, audioName) {
+		this.wavesurfer = wavesurfer;
+		this.audioName = audioName;
+		this.getCommandName();
+	}
+
+	getCommandName() {
+		//get current command selected
+		this.commandForm = document.querySelector(".augment-form-nest-input.form-visible[id$="+this.audioName+"]");
+		var commandTokens = this.commandForm.getAttribute("id").split('-');
+
+		//format == (id=augment-{cmdName}-input-{audioName})
+		this.commandName = commandTokens[1];
+
+		//after knowing the command, get all relevant attributes accordingly
+		this.command = this.getCommand();
+	}
+
+	getCommand() {
+		if(this.commandName === "vol") {
+			//Volume
+			return new Volume(this.getVolumeAttributes());
+		} else if(this.commandName === "cop") {
+			//Copy
+			return new Copy(this.getCopyAttributes());
+		}
+	}
+
+	getVolumeAttributes() {
+		var form = document.querySelector("#form-"+this.audioName)
+		var newVolume = document.querySelector("#vol-input-slider-"+this.audioName).value;
+		var newStart = form.elements["start-"+this.audioName].value;
+		var newEnd = form.elements["end-"+this.audioName].value;
+
+		return {start: newStart, end: newEnd, volume: newVolume}
+	}
+
+	getCopyAttributes() {
+		var oldStart = Number(document.querySelector("#start-"+this.audioName).value);
+		var oldEnd = Number(document.querySelector("#end-"+this.audioName).value);
+		var copyStart = Number(document.querySelector("#cop-start-"+this.audioName).value);
+
+		var copyEnd = copyStart + oldEnd - oldStart
+		this.wavesurfer.regions.add(this.wavesurfer.addRegion({
+			start: copyStart,
+			end: copyEnd,
+			drag: false,
+			resize: false,
+			color: getCopyColor()
+		}));
+
+		return {start: oldStart, end: oldEnd, copyStart: copyStart}
+	}
+
+	getObject() {
+		var jsonObject = {};
+		jsonObject[this.audioName] = this.command;
+		jsonObject["commandName"] = this.command.name;
+		return jsonObject;
+	}
+}
+
+class Volume {
+	start;
+	end;
+	volume;
+	name="Volume";
+
+	constructor(attr) {
+		this.start = attr["start"];
+		this.end = attr["end"];
+		this.volume = attr["volume"];
+	}
+}
+
+class Copy {
+	start;
+	end;
+	copyStart;
+	name="Copy";
+
+	constructor(attr) {
+		this.start = attr["start"];
+		this.end = attr["end"];
+		this.copyStart = attr["copyStart"];
+	}
+}
+
 localStorage.clear();
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -35,6 +176,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			});
 
 		setValues(wavesurfer, name);
+		CommandStore.initStorage(name);
 		wavesurfer.load(`http://192.168.0.107:5000${dir}/${name}.wav`);
 
 	}
@@ -65,6 +207,12 @@ function setValues(wavesurfer, name) {
 	wavesurfer.on("region-click", region => {editAnnotation(region, name)});
 	wavesurfer.on("region-update-end", region => {editAnnotation(region, name)});
 
+	var addCommandButton = document.querySelector("#add-command-"+name);
+	addCommandButton.onclick = function() {
+		commandListener(wavesurfer, name);
+	}
+
+	/*
 	var copyForm = document.querySelectorAll("#augment-cop-input-"+name);
 
 	var cButton = document.querySelector("#cop-button-"+name);
@@ -84,16 +232,14 @@ function setValues(wavesurfer, name) {
 				color: getCopyColor()
 			}))
 		}})(wavesurfer);
-	}
+	}*/
 }
 
-function enableVolumeForm(form) {
-	form.classList.add("form-visible");
-
-	form.onsubmit = function(e) {
-		e.preventDefault();
-		form.classList.remove("form-visible");
-	}
+function commandListener(wavesurfer, audioName) {
+	var command = new Command(wavesurfer, audioName);
+	var jsonCommand = command.getObject();
+	console.log(jsonCommand);
+	CommandStore.addCommand(audioName, jsonCommand);
 }
 
 function editAnnotation(region, name) {
@@ -114,8 +260,8 @@ function editAnnotation(region, name) {
 		});
 		form.classList.remove("form-visible-flex");
 		//form.classList.remove("tile");
-		newVolume = document.querySelector("#vol-input-slider-"+name).value;
-		appendStorage(name, {Volume: {start: newStart, end: newEnd, volume: newVolume}})
+		//newVolume = document.querySelector("#vol-input-slider-"+name).value;
+		//appendStorage(name, {Volume: {start: newStart, end: newEnd, volume: newVolume}})
 	};
 
 	form.onreset = function() {
@@ -165,15 +311,15 @@ function addListeners() {
 			var name = tokens[tokens.length-1]
 
 			var allButton = document.querySelectorAll("#"+curId+" .augment-radio");
-			console.log(curId, name);
+			//console.log(curId, name);
 			for(button of allButton) {
-				console.log(button);
+				//console.log(button);
 				button.onclick = (function(scopeButton) {
 					return function() {
 					var buttonText = scopeButton.getAttribute("id").split('-')[0];
 					var cmd = buttonText.toLowerCase().slice(0, 3);
 					var form = document.querySelector("#augment-"+cmd+"-input-"+name);
-					console.log(buttonText, cmd, form);
+					//console.log(buttonText, cmd, form);
 					enableAugment(form);
 				}})(button);
 			}
@@ -185,34 +331,16 @@ function addListeners() {
 
 	var loadOriginalButton = document.querySelector("#reload-original");
 	loadOriginalButton.onclick = loadOriginal;
+
 }
 
 function getCopyColor() {
 	color = "hsla(0, 0, " + Math.random() + ", 1)";
 }
 
-function insertStorage(name, keyValue) {
-	localStorage.set(name, keyValue);
-}
-
-function appendStorage(name, keyValue) {
-	var list = localStorage.getItem(name);
-	if (list == null) {
-		localStorage.setItem(name, JSON.stringify([keyValue]));
-		return;
-	}
-	list = JSON.parse(list);
-	list.push(keyValue);
-	localStorage.setItem(name, JSON.stringify(list));
-}
-
 function sendAugmentData() {
 	var xhr = new XMLHttpRequest();
-	var jsonData = {}
-	Object.keys(localStorage).forEach(key => {
-		jsonData[key] = JSON.parse(localStorage.getItem(key));
-	});
-	jsonData = JSON.stringify(jsonData);
+	jsonData = JSON.stringify(CommandStore.customStorage);
 
 	xhr.open('POST', '/augment');
 	xhr.setRequestHeader('Content-Type', 'application/json');
@@ -234,4 +362,9 @@ function loadOriginal() {
 	xhr.onreadystatechange = function() {location.href=target.href;}
 	xhr.send(null);
 
+}
+
+function getLastItem(arr) {
+	len = arr.length;
+	return arr[len-1];
 }
