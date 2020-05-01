@@ -59,6 +59,7 @@ def augment():
     if request.method == "POST":
         json_data = request.get_json()
 
+        print(session.get("signal_augmented"), " augmented signal")
         signal = session.get("signal_augmented", session["signal"])
         signal = augment_data(Augment(), signal, json_data, session["audio_meta"])
 
@@ -80,8 +81,11 @@ def augment():
             _save_all(signal)
         elif load_augment:
             session_signal_name += "_augmented"
+        else:
+            print("POPPING AUGMENTED")
+            session.pop("signal_augmented", None)
 
-        signal = session.get(session_signal_name)
+        signal = session.get(session_signal_name, session.get("signal"))
         names = signal.get_names()
         if "signal_augmented" in session and load_augment:
             names = [f"{n}_augmented" for n in names]

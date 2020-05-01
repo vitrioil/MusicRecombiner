@@ -6,4 +6,5 @@ pretrained_models/
 flask_session/
 data/
 *pkl
+*swp
 

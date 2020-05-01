@@ -50,30 +50,37 @@ def augment_data(augment, signal, json, audio_metadata):
     stem_names = list(json.keys())
 
     print(json)
-    for name in stem_names:
-        name = name.replace("_augmented", '')
+    for audio_name in stem_names:
         augment.clear()
+        signal_base_name = audio_name.replace("_augmented", '')
 
-        commands = json.get(name)
-        print(name, commands)
-        for command in commands:
-            if "Volume" in command.keys():
-                param = command.get("Volume", {})
-                start = float(param.get("start"))
-                end = float(param.get("end"))
-                volume = int(param.get("volume"), 100) / 100
-                if volume == 1:
-                    continue
-                augment = augment.amplitude(interval=(start, end),
-                                            gain=volume, sample_rate=sample_rate)
-
-            elif "Copy" in command.keys():
-                param = command.get("Copy")
-                start = float(param.get("start"))
-                end = float(param.get("end"))
-                copy_start = float(param.get("copyStart"))
-                augment = augment.copy(interval=(start, end), copy_start=copy_start,
-                                       sample_rate=sample_rate)
-
-        augment.augment(signal, name)
+        commands = json.get(audio_name)
+        for command_name, command_params in commands.items():
+            if command_name == "Volume":
+                augment = augment_volume(augment, command_params, sample_rate)
+            elif command_name == "Copy":
+                augment = augment_copy(augment, command_params, sample_rate)
+        augment.augment(signal, signal_base_name)
     return signal
+
+def augment_volume(augment, params, sample_rate):
+    for param in params:
+        start = float(param.get("start"))
+        end = float(param.get("end"))
+        volume = int(param.get("volume", 100)) / 100
+        if volume == 1:
+            continue
+
+        augment = augment.amplitude(interval=(start, end),
+                                    gain=volume, sample_rate=sample_rate)
+    return augment
+
+def augment_copy(augment, params, sample_rate):
+    for param in params:
+        start = float(param.get("start"))
+        end = float(param.get("end"))
+        copy_start = float(param.get("copyStart"))
+        augment = augment.copy(interval=(start, end), copy_start=copy_start,
+                               sample_rate=sample_rate)
+    return augment
+
