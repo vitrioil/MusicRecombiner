@@ -338,6 +338,13 @@ function addListeners() {
 
 	var loadOriginalButton = document.querySelector("#reload-original");
 	loadOriginalButton.onclick = loadOriginal;
+
+	var uploadButton = document.querySelector("#upload-button");
+	if(uploadButton != null) {
+		uploadButton.onclick = function() {
+			this.classList.add("is-loading");
+		};
+	}
 }
 
 function getCopyColor() {
