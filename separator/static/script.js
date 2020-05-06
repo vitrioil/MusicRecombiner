@@ -184,8 +184,30 @@ document.addEventListener("DOMContentLoaded", function() {
 
 function setValues(wavesurfer, name) {
 
+	setPlayButton(wavesurfer, name);
+
+	wavesurfer.on("region-click", region => {editAnnotation(region, name)});
+	wavesurfer.on("region-update-end", region => {editAnnotation(region, name)});
+
+	var addCommandButton = document.querySelector("#add-command-"+name);
+	addCommandButton.onclick = function() {
+		commandListener(wavesurfer, name);
+	}
+
+	progressBar(wavesurfer, name);
+}
+
+function setPlayButton(wavesurfer, name) {
 	document.querySelector("#button-" + name).onclick = (function(surf) {
 						return function() {surf.playPause()}
+						})(wavesurfer);
+
+	document.querySelector("#button-forward-" + name).onclick = (function(surf) {
+						return function() {surf.skipForward()}
+						})(wavesurfer);
+
+	document.querySelector("#button-backward-" + name).onclick = (function(surf) {
+						return function() {surf.skipBackward()}
 						})(wavesurfer);
 
 	document.querySelector("#button-stop-" + name).onclick = (function(surf) {
@@ -204,35 +226,32 @@ function setValues(wavesurfer, name) {
 		document.querySelectorAll(".button-stop-wave").forEach(btn => {btn.click()})
 	};
 
-	wavesurfer.on("region-click", region => {editAnnotation(region, name)});
-	wavesurfer.on("region-update-end", region => {editAnnotation(region, name)});
+	document.querySelector("#play-forward-all").onclick = function() {
+		document.querySelectorAll(".button-forward-wave").forEach(btn => {btn.click()})
+	};
 
-	var addCommandButton = document.querySelector("#add-command-"+name);
-	addCommandButton.onclick = function() {
-		commandListener(wavesurfer, name);
-	}
+	document.querySelector("#play-backward-all").onclick = function() {
+		document.querySelectorAll(".button-backward-wave").forEach(btn => {btn.click()})
+	};
+}
 
-	/*
-	var copyForm = document.querySelectorAll("#augment-cop-input-"+name);
+function progressBar(wavesurfer, name) {
+	var progressDiv = document.querySelector('#progress-bar-'+name);
+	var progressBar = progressDiv.querySelector('.progress-bar');
 
-	var cButton = document.querySelector("#cop-button-"+name);
-	if (cButton != null) {
-		cButton.onclick = (function(surf) {
-			return function() {
-			var oldStart = Number(document.querySelector("#start-"+name).value);
-			var oldEnd = Number(document.querySelector("#end-"+name).value);
-			var copyStart = document.querySelector("#cop-start-"+name).value;
-			var copyEnd = Number(copyStart) + oldEnd - oldStart
-			appendStorage(name, {Copy: {start: oldStart, end: oldEnd, copyStart: copyStart}})
-			surf.regions.add(surf.addRegion({
-				start: copyStart,
-				end: copyEnd,
-				drag: false,
-				resize: false,
-				color: getCopyColor()
-			}))
-		}})(wavesurfer);
-	}*/
+	var showProgress = function(percent) {
+		progressDiv.style.display = 'block';
+		progressBar.style.width = percent + '%';
+	};
+
+	var hideProgress = function() {
+		progressDiv.style.display = 'none';
+	};
+
+	wavesurfer.on('loading', showProgress);
+	wavesurfer.on('ready', hideProgress);
+	wavesurfer.on('destroy', hideProgress);
+	wavesurfer.on('error', hideProgress);
 }
 
 function commandListener(wavesurfer, audioName) {
@@ -245,7 +264,6 @@ function commandListener(wavesurfer, audioName) {
 function editAnnotation(region, name) {
 	var form = document.querySelector("#form-"+name)
 	form.classList.add("form-visible-flex");
-	//form.classList.add("tile");
 
 	(form.elements["start-"+name].value = Math.round(region.start * 10) / 10),
 	(form.elements["end-"+name].value = Math.round(region.end * 10) / 10);
@@ -259,9 +277,6 @@ function editAnnotation(region, name) {
 			end: newEnd
 		});
 		form.classList.remove("form-visible-flex");
-		//form.classList.remove("tile");
-		//newVolume = document.querySelector("#vol-input-slider-"+name).value;
-		//appendStorage(name, {Volume: {start: newStart, end: newEnd, volume: newVolume}})
 	};
 
 	form.onreset = function() {
@@ -285,14 +300,6 @@ function addListeners() {
 
 	var volume_button = document.querySelector("#radio-Volume");
 	var copy_button = document.querySelector("#radio-Copy");
-
-	function flip_visibility(form) {
-		if(!form.classList.contains("form-visible")) {
-			form.classList.add("form-visible");
-		} else {
-			form.classList.remove("form-visible");
-		}
-	}
 
 	function enableAugment(form) {
 		document.querySelectorAll(".augment-form-nest-input").forEach(
@@ -331,7 +338,6 @@ function addListeners() {
 
 	var loadOriginalButton = document.querySelector("#reload-original");
 	loadOriginalButton.onclick = loadOriginal;
-
 }
 
 function getCopyColor() {
@@ -361,10 +367,10 @@ function loadOriginal() {
 	xhr.open('GET', target.href);
 	xhr.onreadystatechange = function() {location.href=target.href;}
 	xhr.send(null);
-
 }
 
 function getLastItem(arr) {
 	len = arr.length;
 	return arr[len-1];
 }
+

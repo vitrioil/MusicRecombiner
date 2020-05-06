@@ -4,76 +4,63 @@
 <div class="column tile is-vertical">
 	{% for name in names %}
 
-		<div class="tile is-block">{{name}}</div>
+		<div class="tile columns box has-background-info">
 
-		<div id={{"waveform-"~name}} class="tile is-block waveform m-5 p-3" name={{name}} dir={{dir}}></div>
-		<div id={{"wave-timeline-"~name}} class="tile is-block m-5 p-3"></div>
-		<div class="tile is-flex jty-ctr m-10 p-3">
-			<input id={{"slider-"~name}} data-action="zoom" type="range" min="1" max="200" value="0"/>
+			<div class="tile column is-centered is-vertical">
+				<button id={{"button-backward-"~name}} class="tile button is-primary column is-block m-5 p-3 is-rounded button-backward-wave">
+					<i class="fa fa-step-backward"></i>
+				</button>
+
+				<button id={{"button-"~name}} class="tile button is-primary column is-block m-5 p-3 is-rounded button-play-wave">
+					<i class="fa fa-play"></i>
+					<i class="fa fa-pause"></i>
+				</button>
+
+				<button id={{"button-stop-"~name}} class="tile button is-primary column is-block m-5 p-3 is-rounded button-stop-wave">
+					<i class="fa fa-stop"></i>
+				</button>
+
+				<button id={{"button-forward-"~name}} class="tile button is-primary column is-block m-5 p-3 is-rounded button-forward-wave">
+					<i class="fa fa-step-forward"></i>
+				</button>
+
+			</div>
+
+			<div class="tile column is-flex jty-ctr m-10 p-3">
+				<input id={{"slider-"~name}} data-action="zoom" type="range" min="1" max="200" value="0" class="slider" orient="vertical"/>
+			</div>
+
+			<div class="tile column is-vertical is-11">
+				<div class="tile is-block ctr-lbl">{{name}}</div>
+				<div id={{"waveform-"~name}} class="tile is-block waveform m-5 p-3" name={{name}} dir={{dir}}>
+					<div class="progress progress-striped active" id={{"progress-bar-"~name}}>
+						<progress class="progress is-small is-primary" max="100">15%</progress>
+					</div>
+				</div>
+				<div id={{"wave-timeline-"~name}} class="tile is-block m-5 p-3"></div>
+			</div>
+
+
 		</div>
 
-		<div class="tile columns is-centered">
-			<button id={{"button-"~name}} class="button is-primary column is-3 is-block m-5 p-3 button-play-wave">
-				<i class="glyphicon glyphicon-play"></i>
-				Play
-				/
-				<i class="glyphicon glyphicon-pause"></i>
-				Pause
-			</button>
-
-			<button id={{"button-stop-"~name}} class="button is-primary column is-3 is-block m-5 p-3 button-stop-wave">
-				<i class="glyphicon glyphicon-stop"></i>
-				Stop
-			</button>
-		</div>
 
 		<form role="form" id={{"form-"~name}} class="augment-form">
 
-			<!--
-			<div class="field">
-				<label for={{"start-"~name}}>Start</label>
-				<input class="input" id={{"start-"~name}} name={{"start-"~name}} />
-			</div>
-
-			<div class="field">
-				<label for={{"end-"~name}}>End</label>
-				<input class="input" id={{"end-"~name}} name={{"end-"~name}} />
-			</div>
-
-			<div class="field augment-input" id={{"augment-input-"~name}}>
-				{% for aug in augment %}
-					{{ aug(class='augment-radio', id=aug.label.text~'-'~name) }}
-					{{ aug.label }}
-				{% endfor %}
-			</div>
-
-			<div class="augment-form augment-form-nest-input vol-input" id={{"augment-vol-input-"~name}}>
-				<label for={{"vol-input-slider-"~name}}>Volume</label>
-				<input id={{"vol-input-slider-"~name}} data-action="zoom" type="range" min="0" max="100" value="100" style="width: 50%"/>
-			</div>
-
-			<div class="augment-form augment-form-nest-input cop-input" id={{"augment-cop-input-"~name}}>
-				<div class="field">
-					<label for={{"cop-start-"~name}}>Copy Start</label>
-					<input class="field" id={{"cop-start-"~name}} name={{"cop-start-"~name}} />
-				</div>
-
-				<button type="button" class="button is-info is-block cop-button" id={{"cop-button-"~name}}>Copy</button>
-			</div>
-
-			<button type="submit" class="button is-success is-block">Save</button>-->
 			<div class="tile is-vertical jty-ctr">
 				<nav class="tile level" style="width: 50%;">
 					<div class="level-left">
 						<div class="level-item">
 							<div class="field has-addons">
-								<p class="control subtitle is-5">Start</p>
-								<div class="control">
-									<input class="input" id={{"start-"~name}} name={{"start-"~name}} />
-								</div>
-								<p class="control subtitle is-5">End</p>
-								<div class="control">
-									<input class="input" id={{"end-"~name}} name={{"end-"~name}} />
+								<div class="columns">
+									<label for={{"start-"~name}} class="column ctr-lbl">Start</label>
+									<div class="column control is-4">
+										<input class="input" id={{"start-"~name}} name={{"start-"~name}} />
+									</div>
+
+									<label for={{"end-"~name}} class="column ctr-lbl">End</label>
+									<div class="column control is-4">
+										<input class="input" id={{"end-"~name}} name={{"end-"~name}} />
+									</div>
 								</div>
 							</div>
 						</div>
@@ -101,7 +88,7 @@
 					</div>
 				</nav>
 
-				<div class="tile">
+				<div class="tile augment-form-container">
 					<nav class="level augment-form augment-form-nest-input vol-input" id={{"augment-vol-input-"~name}}>
 						<div class="control level-item">
 							<input id={{"vol-input-slider-"~name}} data-action="zoom" type="range" min="0" max="100" value="100" style="width: 50%"/>
@@ -116,7 +103,6 @@
 						<div class="control level-item">
 							<input class="field" id={{"cop-start-"~name}} name={{"cop-start-"~name}} />
 						</div>
-
 					</nav>
 				</div>
 			</div>
@@ -124,25 +110,30 @@
 
 	{% endfor %}
 
-	<div class="tile columns is-centered">
-		<button id="play-all" class="column button is-primary is-block is-3 m-5 p-3">
-			<i class="glyphicon glyphicon-play"></i>
-				Play All
-				/
-			<i class="glyphicon glyphicon-pause"></i>
-				Pause All
-		</button>
+	<div class="tile is-vertical jty-ctr">
+		<div class="tile level" style="width:10%;">
+			<button id="play-backward-all" class="level-item button is-primary is-rounded">
+				<i class="fa fa-step-backward"></i>
+			</button>
 
-		<button id="stop-all" class="column button is-primary is-block is-3 m-5 p-3">
-			<i class="glyphicon glyphicon-stop"></i>
-				Stop All
-		</button>
+			<button id="play-all" class="level-item button is-primary is-rounded">
+				<i class="fa fa-play"></i>
+				<i class="fa fa-pause"></i>
+			</button>
 
-	</div>
+			<button id="stop-all" class="level-item button is-primary is-rounded">
+				<i class="fa fa-stop"></i>
+			</button>
 
-	<div class="tile columns is-centered">
-		<button type="button" class="column button is-primary is-block m-10 p-3 is-3" id="augment-final-button">Augment</button>
-		<button type="button" class="column button is-danger is-block m-10 p-3 is-3" id="reload-original">Load Original</button>
+			<button id="play-forward-all" class="level-item button is-primary is-rounded">
+				<i class="fa fa-step-forward"></i>
+			</button>
+		</div>
+
+		<div class="tile level" style="width:10%;">
+			<button type="button" class="level-item button is-primary is-rounded" id="augment-final-button">Augment</button>
+			<button type="button" class="level-item button is-danger is-rounded" id="reload-original">Load Original</button>
+		</div>
 	</div>
 
 </div>
