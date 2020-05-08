@@ -113,3 +113,11 @@ main {
 	text-align: center;
 	text-transform: capitalize;
 }
+
+.row-strikethrough {
+	text-decoration: line-through;
+}
+
+.no-bottom-border {
+	border-bottom: none !important;
+}

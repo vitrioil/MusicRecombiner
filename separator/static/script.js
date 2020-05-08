@@ -62,6 +62,19 @@ class CommandStore {
 		return commands;
 	}
 
+	static removeAugmentation(name, cmdName, idx) {
+		/*
+		 * Remove augmentation from `name` stem,
+		 * `cmdName` command at the `idx` index
+		 */
+		if(this.customStorage[name] === null ||
+		this.customStorage[name][cmdName] === null ||
+		this.customStorage[name][cmdName].length <= idx) {
+			return;
+		}
+		this.customStorage[name][cmdName].splice(idx, 1);
+	}
+
 }
 
 function printStorage() {
@@ -167,10 +180,10 @@ class Volume {
 
 	static pretty(obj) {
 		return {
-			"Command": obj.name,
-			"Start": obj.start,
-			"End": obj.end,
-			"Volume": obj.volume + "%"
+			"Command Name": obj.name,
+			"Start Timestamp": obj.start,
+			"End Timestamp": obj.end,
+			"Target Volume": obj.volume + "%"
 		};
 	}
 }
@@ -189,10 +202,10 @@ class Copy {
 
 	static pretty(obj) {
 		return {
-			"Command": obj.name,
-			"Start": obj.start,
-			"End": obj.end,
-			"Copy": obj.copyStart
+			"Command Name": obj.name,
+			"Start Timestamp": obj.start,
+			"End Timestamp": obj.end,
+			"New Copy Timestamp": obj.copyStart
 		};
 	}
 }
@@ -428,6 +441,14 @@ function addListeners() {
 		};
 	});
 
+	var saveModalButton = document.querySelector("#toggle-modal-save");
+	if(saveModalButton != null) {
+		saveModalButton.onclick = function() {
+			removeMarkedItems();
+			toggleModalClasses(name);
+		}
+	}
+
 }
 
 function toggleModalClasses(name) {
@@ -435,19 +456,10 @@ function toggleModalClasses(name) {
 	var modal = document.querySelector(".modal");
 
 	var cmdDetails = CommandStore.getCommandDetails(name);
-	if(typeof cmdDetails != "null") {
-		var detailsList = [];
-		for(var cmdName in cmdDetails) {
-			var cmd = cmdDetails[cmdName];
-			console.log(cmd);
-			for(c of cmd) {
-				var cPrettyObj = getPrettyCommand(cmdName, c);
-				console.log(cPrettyObj);
-				detailsList.push(cPrettyObj);
-			}
-		}
-		addTableToModal(detailsList, name);
+	if(cmdDetails === null) {
+		cmdDetails = {}
 	}
+	addTablesToModal(cmdDetails, name);
 
 	if(modal.classList.contains("is-active")) {
 		modal.classList.remove('is-active');
@@ -456,57 +468,110 @@ function toggleModalClasses(name) {
 	}
 }
 
-function addTableToModal(detailsList, name) {
+function addTablesToModal(cmdDetails, name) {
 	//Add table as a child to modal-body
 	var modalBody = document.querySelector(".modal-card-body");
 	modalBody.innerHTML = "";
 	var subtitle = document.createElement("label");
 	var subtitleText = name.charAt(0).toUpperCase() + name.substr(1);
 	subtitle.innerHTML = subtitleText;
-	var table = document.createElement("table");
 
-	for(details of detailsList) {
-		var row = document.createElement("tr");
-		console.log(details);
-		for(key in details) {
-			var data = details[key];
-			var keyTableData = document.createElement("td");
-			var valueTableData = document.createElement("td");
-			keyTableData.innerHTML = key;
-			valueTableData.innerHTML = data;
-
-			row.appendChild(keyTableData);
-			row.appendChild(valueTableData);
+	var tables = [];
+	for(cmdName in cmdDetails) {
+		//Each iteration creates a table.
+		var table = document.createElement("table");
+		var cmd = cmdDetails[cmdName];
+		if(cmd.length === 0) {
+			continue;
 		}
-		table.appendChild(row);
+
+		var tableHead = document.createElement("thead");
+		var headRow = document.createElement("tr");
+		var prettyObj = getPrettyCommand(cmdName, cmd[0]);
+		var tableSubtitleText;
+
+		for(key in prettyObj) {
+			if(key==="Command Name"){
+				tableSubtitleText = prettyObj[key];
+				continue;
+			}
+			var headData = document.createElement("th");
+			headData.innerHTML = key;
+			headRow.appendChild(headData);
+		}
+		tableHead.appendChild(headRow);
+		table.appendChild(tableHead);
+
+		//Add row
+		var idx = 0;
+		for(c of cmd) {
+			prettyObj = getPrettyCommand(cmdName, c);
+			var dataRow = document.createElement("tr");
+
+			for(key in prettyObj) {
+				if(key==="Command Name"){continue;}
+				//Add column value
+				var data = prettyObj[key];
+				var rowEntry = document.createElement("td");
+
+				rowEntry.innerHTML = data;
+				dataRow.appendChild(rowEntry);
+			}
+			var buttonEntry = document.createElement("td");
+			buttonEntry.className = "no-bottom-border";
+			var markItemButton = document.createElement("button");
+			markItemButton.className = "delete has-background-danger";
+
+			markItemButton.onclick = (function(cId, cName) {
+				return function() {return markItemListener(name, cName, cId);}
+			})(idx, cmdName);
+
+			buttonEntry.appendChild(markItemButton);
+			dataRow.appendChild(buttonEntry);
+			dataRow.setAttribute("id", `${name}-${cmdName}-${idx}`);
+			table.appendChild(dataRow);
+			idx += 1;
+		}
+		tables.push({table: table, subtitle: tableSubtitleText});
 	}
 
-	if(detailsList.length === 0) {
-		var row = document.createElement("tr");
-		row.innerHTML = "No Augmentations for " + subtitleText + ". Add augmentations by clicking on a region on the waveform"
-		table.appendChild(row);
-	} else {
-		modalBody.appendChild(subtitle);
+	console.log(cmdDetails);
+	if(cmdDetails.length === 0 || Object.keys(cmdDetails).length === 0 ||
+		tables.length === 0) {
+		var label = document.createElement("label");
+		label.innerHTML = `No Augmentations for ${subtitleText}. Add augmentations by clicking on a region on the waveform`
+		modalBody.appendChild(label);
 	}
 
-	table.className = "table";
-	modalBody.appendChild(table);
+	for(tableWrap of tables) {
+		var table = tableWrap["table"];
+		subtitleText = tableWrap["subtitle"];
 
-}
+		subtitle = document.createElement("label");
+		subtitle.innerHTML = subtitleText;
 
-function addTablesToModal(detailsList, name) {
-	//Add table as a child to modal-body
-	var modalBody = document.querySelector(".modal-card-body");
-	modalBody.innerHTML = "";
-	var subtitle = document.createElement("label");
-	var subtitleText = name.charAt(0).toUpperCase() + name.substr(1);
-	subtitle.innerHTML = subtitleText;
-
-
-	for(table of tables) {
 		table.className = "table";
+		modalBody.appendChild(subtitle);
 		modalBody.appendChild(table);
 	}
+}
+
+function markItemListener(name, cmdName, idx) {
+	console.log(name, cmdName, idx);
+	var row = document.querySelector("#"+name+"-"+cmdName+"-"+idx);
+	if(row.classList.contains("row-strikethrough")) {
+		row.classList.remove("row-strikethrough");
+	} else {
+		row.classList.add("row-strikethrough");
+	}
+}
+
+function removeMarkedItems() {
+	var markedRow = document.querySelectorAll(".row-strikethrough");
+	markedRow.forEach(mr => {
+		var tokens = mr.getAttribute("id").split('-');
+		CommandStore.removeAugmentation(tokens[0], tokens[1], tokens[2]);
+	});
 }
 
 function getPrettyCommand(cmdName, cmd) {
