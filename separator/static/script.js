@@ -1,22 +1,27 @@
 class CommandStore {
+	/*
+	 * Stores all the augmentation input
+	 * from the user.
+	 */
 
 	static customStorage = {};
 
 	static addCommand(name, jsonObject) {
+		/*
+		 * Add command to storage.
+		 * Storage will be submitted to flask
+		 * server when user clicks on augment.
+		 */
 		var commandName = jsonObject["commandName"]
 		var keyValue = jsonObject[name]
 		this.appendStorage(name, commandName, keyValue);
 	}
 
 	static initStorage(name) {
-		//this.setObject(localStorage, name, {});
+		/*
+		 * Initialize key with signal names.
+		 */
 		this.customStorage[name] = {};
-	}
-
-	static appendObject(driverObject, key, value) {
-		var list = this.getObject(driverObject, key);
-		list.push(value);
-		driverObject.setItem(key, list);
 	}
 
 	static setObject(driverObject, key, value) {
@@ -44,13 +49,33 @@ class CommandStore {
 		this.customStorage[name][commandName] = commandList;
 	}
 
+	static getCommandDetails(name) {
+		/*
+		 * Get all command details for one
+		 * type of signal provided by name.
+		 */
+		if(typeof this.customStorage[name] == "undefined") {
+			return null;
+		}
+
+		var commands = this.customStorage[name];
+		return commands;
+	}
+
 }
 
 function printStorage() {
-	console.log(CommandStore.customStorage);
+	/*
+	 * Console command to print storage
+	 */
+	return CommandStore.customStorage;
 }
 
 class Command {
+	/*
+	 * This class deals with retrieval of user
+	 * inputs and storing them as object
+	 */
 	constructor(wavesurfer, audioName) {
 		this.wavesurfer = wavesurfer;
 		this.audioName = audioName;
@@ -70,6 +95,11 @@ class Command {
 	}
 
 	getCommand() {
+		/*
+		 * Based on the command name
+		 * create object of the specific
+		 * command
+		 */
 		if(this.commandName === "vol") {
 			//Volume
 			return new Volume(this.getVolumeAttributes());
@@ -80,6 +110,9 @@ class Command {
 	}
 
 	getVolumeAttributes() {
+		/*
+		 * Get volume augmentation input
+		 */
 		var form = document.querySelector("#form-"+this.audioName)
 		var newVolume = document.querySelector("#vol-input-slider-"+this.audioName).value;
 		var newStart = form.elements["start-"+this.audioName].value;
@@ -89,6 +122,9 @@ class Command {
 	}
 
 	getCopyAttributes() {
+		/*
+		 * Get copy augmentation input
+		 */
 		var oldStart = Number(document.querySelector("#start-"+this.audioName).value);
 		var oldEnd = Number(document.querySelector("#end-"+this.audioName).value);
 		var copyStart = Number(document.querySelector("#cop-start-"+this.audioName).value);
@@ -104,6 +140,10 @@ class Command {
 
 		return {start: oldStart, end: oldEnd, copyStart: copyStart}
 	}
+
+	/*
+	 * Add custom getCmdAttributes <here>
+	 */
 
 	getObject() {
 		var jsonObject = {};
@@ -124,6 +164,15 @@ class Volume {
 		this.end = attr["end"];
 		this.volume = attr["volume"];
 	}
+
+	static pretty(obj) {
+		return {
+			"Command": obj.name,
+			"Start": obj.start,
+			"End": obj.end,
+			"Volume": obj.volume + "%"
+		};
+	}
 }
 
 class Copy {
@@ -137,15 +186,24 @@ class Copy {
 		this.end = attr["end"];
 		this.copyStart = attr["copyStart"];
 	}
+
+	static pretty(obj) {
+		return {
+			"Command": obj.name,
+			"Start": obj.start,
+			"End": obj.end,
+			"Copy": obj.copyStart
+		};
+	}
 }
 
-localStorage.clear();
-
 document.addEventListener("DOMContentLoaded", function() {
+	//Initialize all listeners
 	addListeners();
 
 	var waves = document.getElementsByClassName("waveform")
 	for (wav of waves) {
+		//For each waveform setup the page
 		name = wav.getAttribute("name");
 		dir = wav.getAttribute("dir");
 
@@ -175,8 +233,11 @@ document.addEventListener("DOMContentLoaded", function() {
 			]
 			});
 
+		//Object specific listeners
 		setValues(wavesurfer, name);
+		//Initialize storage for particular signal
 		CommandStore.initStorage(name);
+		//Load the waveform
 		wavesurfer.load(`http://192.168.0.107:5000${dir}/${name}.wav`);
 
 	}
@@ -186,18 +247,24 @@ function setValues(wavesurfer, name) {
 
 	setPlayButton(wavesurfer, name);
 
+	//Whenever a region is clicked show the form
 	wavesurfer.on("region-click", region => {editAnnotation(region, name)});
 	wavesurfer.on("region-update-end", region => {editAnnotation(region, name)});
 
+	//Whenever user clicks on add button, store the user input.
 	var addCommandButton = document.querySelector("#add-command-"+name);
 	addCommandButton.onclick = function() {
 		commandListener(wavesurfer, name);
 	}
 
+	//Add progress bar before audio is fully loaded
 	progressBar(wavesurfer, name);
 }
 
 function setPlayButton(wavesurfer, name) {
+	/*
+	 * Listeners for audio playback across the page
+	 */
 	document.querySelector("#button-" + name).onclick = (function(surf) {
 						return function() {surf.playPause()}
 						})(wavesurfer);
@@ -288,6 +355,12 @@ function editAnnotation(region, name) {
 }
 
 function addListeners() {
+	/*
+	 * Setup all listeners
+	 */
+
+	//Bulma is a pure CSS framework. Hence, custom JS to show file name when user
+	//selects a file
 	const fileInput = document.querySelector('#file-input-upload input[type=file]');
 	if(fileInput != null) {
 		fileInput.onchange = () => {
@@ -302,6 +375,9 @@ function addListeners() {
 	var copy_button = document.querySelector("#radio-Copy");
 
 	function enableAugment(form) {
+		/*
+		 * Toggle form based on user click
+		 */
 		document.querySelectorAll(".augment-form-nest-input").forEach(
 			(item) => {item.classList.remove("form-visible")}
 		);
@@ -310,7 +386,6 @@ function addListeners() {
 
 	var allAugmentInputs = document.querySelectorAll(".augment-input");
 	for(augmentInput of allAugmentInputs) {
-		//console.log(augmentInput);
 		augmentInput.onclick = (function(scopeAugment) {
 			return function () {
 			var curId = scopeAugment.getAttribute("id");
@@ -318,15 +393,13 @@ function addListeners() {
 			var name = tokens[tokens.length-1]
 
 			var allButton = document.querySelectorAll("#"+curId+" .augment-radio");
-			//console.log(curId, name);
 			for(button of allButton) {
-				//console.log(button);
 				button.onclick = (function(scopeButton) {
 					return function() {
 					var buttonText = scopeButton.getAttribute("id").split('-')[0];
 					var cmd = buttonText.toLowerCase().slice(0, 3);
 					var form = document.querySelector("#augment-"+cmd+"-input-"+name);
-					//console.log(buttonText, cmd, form);
+
 					enableAugment(form);
 				}})(button);
 			}
@@ -344,6 +417,103 @@ function addListeners() {
 		uploadButton.onclick = function() {
 			this.classList.add("is-loading");
 		};
+	}
+
+	//Show modal
+	var toggleButton = document.querySelectorAll(".toggle-modal[id^='toggle-modal']");
+	toggleButton.forEach(t=> {
+		var name = getLastItem(t.getAttribute("id").split('-'));
+		t.onclick = function() {
+			toggleModalClasses(name);
+		};
+	});
+
+}
+
+function toggleModalClasses(name) {
+	//Retrieve all user commands
+	var modal = document.querySelector(".modal");
+
+	var cmdDetails = CommandStore.getCommandDetails(name);
+	if(typeof cmdDetails != "null") {
+		var detailsList = [];
+		for(var cmdName in cmdDetails) {
+			var cmd = cmdDetails[cmdName];
+			console.log(cmd);
+			for(c of cmd) {
+				var cPrettyObj = getPrettyCommand(cmdName, c);
+				console.log(cPrettyObj);
+				detailsList.push(cPrettyObj);
+			}
+		}
+		addTableToModal(detailsList, name);
+	}
+
+	if(modal.classList.contains("is-active")) {
+		modal.classList.remove('is-active');
+	} else {
+		modal.classList.add('is-active');
+	}
+}
+
+function addTableToModal(detailsList, name) {
+	//Add table as a child to modal-body
+	var modalBody = document.querySelector(".modal-card-body");
+	modalBody.innerHTML = "";
+	var subtitle = document.createElement("label");
+	var subtitleText = name.charAt(0).toUpperCase() + name.substr(1);
+	subtitle.innerHTML = subtitleText;
+	var table = document.createElement("table");
+
+	for(details of detailsList) {
+		var row = document.createElement("tr");
+		console.log(details);
+		for(key in details) {
+			var data = details[key];
+			var keyTableData = document.createElement("td");
+			var valueTableData = document.createElement("td");
+			keyTableData.innerHTML = key;
+			valueTableData.innerHTML = data;
+
+			row.appendChild(keyTableData);
+			row.appendChild(valueTableData);
+		}
+		table.appendChild(row);
+	}
+
+	if(detailsList.length === 0) {
+		var row = document.createElement("tr");
+		row.innerHTML = "No Augmentations for " + subtitleText + ". Add augmentations by clicking on a region on the waveform"
+		table.appendChild(row);
+	} else {
+		modalBody.appendChild(subtitle);
+	}
+
+	table.className = "table";
+	modalBody.appendChild(table);
+
+}
+
+function addTablesToModal(detailsList, name) {
+	//Add table as a child to modal-body
+	var modalBody = document.querySelector(".modal-card-body");
+	modalBody.innerHTML = "";
+	var subtitle = document.createElement("label");
+	var subtitleText = name.charAt(0).toUpperCase() + name.substr(1);
+	subtitle.innerHTML = subtitleText;
+
+
+	for(table of tables) {
+		table.className = "table";
+		modalBody.appendChild(table);
+	}
+}
+
+function getPrettyCommand(cmdName, cmd) {
+	if(cmdName === "Copy") {
+		return Copy.pretty(cmd);
+	} else if(cmdName === "Volume") {
+		return Volume.pretty(cmd);
 	}
 }
 
