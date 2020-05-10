@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
-	<form method="POST" enctype="multipart/form-data" class="ctr-cnt">
+	<form method="POST" enctype="multipart/form-data" class="ctr-cnt" id="upload-form">
 
 		{{ form.csrf_token }}
 		<div class="card">
@@ -41,6 +41,7 @@
 			<footer class="card-footer">
 				<div class="field card-footer-item">
 					{{ form.submit(class="button is-info is-light", id="upload-button") }}
+					<progress class="progress is-small is-info hidden" max="100" id="upload-bar">15%</progress>
 				</div>
 			</footer>
 		</div>

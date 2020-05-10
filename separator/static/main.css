@@ -121,3 +121,7 @@ main {
 .no-bottom-border {
 	border-bottom: none !important;
 }
+
+.hidden {
+	display: none !important;
+}

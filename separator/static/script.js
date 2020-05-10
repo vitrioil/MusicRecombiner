@@ -420,16 +420,24 @@ function addListeners() {
 	}
 
 	var augmentButton = document.querySelector("#augment-final-button");
-	augmentButton.onclick = sendAugmentData;
+	if(augmentButton != null) {
+		augmentButton.onclick = sendAugmentData;
+	}
 
 	var loadOriginalButton = document.querySelector("#reload-original");
-	loadOriginalButton.onclick = loadOriginal;
+	if(loadOriginalButton != null) {
+		loadOriginalButton.onclick = loadOriginal;
+	}
 
-	var uploadButton = document.querySelector("#upload-button");
-	if(uploadButton != null) {
-		uploadButton.onclick = function() {
-			this.classList.add("is-loading");
-		};
+	var uploadForm = document.querySelector("#upload-form");
+	if(uploadForm != null) {
+		uploadForm.onsubmit = function() {
+			var uploadButton = document.querySelector("#upload-button");
+			uploadButton.classList.add("hidden");
+
+			var uploadBar = document.querySelector("#upload-bar");
+			uploadBar.classList.remove("hidden");
+		}
 	}
 
 	//Show modal
@@ -587,6 +595,8 @@ function getCopyColor() {
 }
 
 function sendAugmentData() {
+	var augmentButton = document.querySelector("#augment-final-button");
+	augmentButton.classList.add("is-loading");
 	var xhr = new XMLHttpRequest();
 	jsonData = JSON.stringify(CommandStore.customStorage);
 

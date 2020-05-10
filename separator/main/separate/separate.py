@@ -56,7 +56,6 @@ class SpleeterSeparator(ABCSeparator):
             waveform = audio
         else:
             waveform, _ = self._audio_adapter.load(audio, sample_rate=sample_rate)
-        print(waveform.shape)
 
         prediction = self._separator.separate(waveform)
 
