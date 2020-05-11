@@ -4,7 +4,15 @@ class CommandStore {
 	 * from the user.
 	 */
 
+	//Stores all commands untill submitted
 	static customStorage = {};
+	//Stores the session name
+	static sessionName;
+	//Stores wavesurfer object, used for reloading wave
+	static cacheWave = {};
+	//Store changed signal name, for reloading the original
+	//version of signal
+	static changedSignalName = [];
 
 	static addCommand(name, jsonObject) {
 		/*
@@ -22,6 +30,17 @@ class CommandStore {
 		 * Initialize key with signal names.
 		 */
 		this.customStorage[name] = {};
+	}
+
+	static reloadStorage(changedSignalName) {
+		for(var key of changedSignalName) {
+			this.customStorage[key] = {};
+		}
+		this.changedSignalName = changedSignalName
+	}
+
+	static reloadChangedSignalName() {
+		this.changedSignalName = [];
 	}
 
 	static setObject(driverObject, key, value) {
@@ -73,6 +92,37 @@ class CommandStore {
 			return;
 		}
 		this.customStorage[name][cmdName].splice(idx, 1);
+	}
+
+	static updatedSignalNames() {
+		var keys = [];
+		for(var key in this.customStorage) {
+			var commands = this.customStorage[key];
+			var exists = false;
+			for(var cmdName in commands) {
+				if(commands[cmdName].length != 0) {
+					exists = true;
+					break;
+				}
+			}
+			if(exists) {
+				keys.push(key);
+			}
+		}
+		console.log(keys);
+		return keys;
+	}
+
+	static storeSessionName(sessionName) {
+		this.sessionName = sessionName;
+	}
+
+	static storeWavesurfer(name, wavesurfer) {
+		this.cacheWave[name] = wavesurfer;
+	}
+
+	static getWavesurfer(name) {
+		return this.cacheWave[name];
 	}
 
 }
@@ -210,6 +260,39 @@ class Copy {
 	}
 }
 
+function loadWave(dir, name, augmented) {
+
+	var wavesurfer = CommandStore.getWavesurfer(name);
+	if(wavesurfer == null) {
+		wavesurfer = WaveSurfer.create({
+			container: "#waveform-" + name,
+			plugins: [WaveSurfer.regions.create({
+				regions: [
+					{
+						start: 1,
+						end: 3,
+						color: 'hsla(400, 100%, 30%, 0.5)',
+					}
+				],
+				dragSelection: {
+					slop: 5
+				}
+			}), WaveSurfer.timeline.create({
+					container: '#wave-timeline-' + name
+				})]
+			});
+	}
+
+	//Load the waveform
+	if(augmented) {
+		wavesurfer.load(`http://192.168.0.107:5000${dir}/augmented/${name}.wav`);
+	} else {
+		wavesurfer.load(`http://192.168.0.107:5000${dir}/${name}.wav`);
+	}
+
+	return wavesurfer;
+}
+
 document.addEventListener("DOMContentLoaded", function() {
 	//Initialize all listeners
 	addListeners();
@@ -220,38 +303,14 @@ document.addEventListener("DOMContentLoaded", function() {
 		name = wav.getAttribute("name");
 		dir = wav.getAttribute("dir");
 
-		var wavesurfer = WaveSurfer.create({
-			container: "#waveform-" + name,
-			plugins: [
-
-			WaveSurfer.regions.create({
-				regions: [
-					{
-						start: 1,
-						end: 3,
-						loop: false,
-						color: 'hsla(400, 100%, 30%, 0.5)',
-						drag: true,
-						resize: true
-					}
-				],
-				dragSelection: {
-					slop: 5
-				}
-			}),
-
-				WaveSurfer.timeline.create({
-					container: '#wave-timeline-' + name
-				})
-			]
-			});
+		var wavesurfer = loadWave(dir, name, false);
 
 		//Object specific listeners
 		setValues(wavesurfer, name);
 		//Initialize storage for particular signal
 		CommandStore.initStorage(name);
-		//Load the waveform
-		wavesurfer.load(`http://192.168.0.107:5000${dir}/${name}.wav`);
+		CommandStore.storeSessionName(dir);
+		CommandStore.storeWavesurfer(name, wavesurfer);
 
 	}
 });
@@ -426,7 +485,9 @@ function addListeners() {
 
 	var loadOriginalButton = document.querySelector("#reload-original");
 	if(loadOriginalButton != null) {
-		loadOriginalButton.onclick = loadOriginal;
+		loadOriginalButton.onclick = function() {
+			loadOriginal(this, CommandStore.changedSignalName);
+		};
 	}
 
 	var uploadForm = document.querySelector("#upload-form");
@@ -600,25 +661,25 @@ function sendAugmentData() {
 	var xhr = new XMLHttpRequest();
 	jsonData = JSON.stringify(CommandStore.customStorage);
 
-	xhr.open('POST', '/augment');
+	var changedSignalName = CommandStore.updatedSignalNames();
+
+	xhr.open('POST', '/augmented');
 	xhr.setRequestHeader('Content-Type', 'application/json');
 	xhr.send(jsonData);
 
-	xhr.onreadystatechange = function() {location.href="/augment";}
+	xhr.onreadystatechange = function() {
+		changedSignalName.forEach(c => {loadWave(CommandStore.sessionName, c, true)});
+		augmentButton.classList.remove("is-loading");
+		CommandStore.reloadStorage(changedSignalName);
+	}
 }
 
-function loadOriginal() {
-	const target = new URL(location.href);
-	const params = new URLSearchParams();
+function loadOriginal(loadButton, signalNames) {
+	loadButton.classList.add("is-loading");
+	signalNames.forEach(c => {loadWave(CommandStore.sessionName, c, false)});
+	loadButton.classList.remove("is-loading");
 
-	params.set("augment", false);
-	target.search = params.toString();
-
-	var xhr = new XMLHttpRequest();
-
-	xhr.open('GET', target.href);
-	xhr.onreadystatechange = function() {location.href=target.href;}
-	xhr.send(null);
+	CommandStore.reloadChangedSignalName();
 }
 
 function getLastItem(arr) {

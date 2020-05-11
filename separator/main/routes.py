@@ -46,31 +46,20 @@ def home():
         return redirect(url_for("main.augment"))
     return render_template("home.html", form=form, title="Home")
 
-@main.route("/augment", methods=["GET", "POST"])
+def _save_all(signal, augmented=False):
+    augment_str = "augmented" if augmented else ''
+    for name, sig in signal.get_items():
+        signal_path = session["dir"] / augment_str / name
+        save_audio(sig, signal_path, session["audio_meta"])
+
+@main.route("/augment", methods=["GET"])
 def augment():
-    def _save_all(signal, augmented=False):
-        augment_str = "_augmented" if augmented else ''
-        for name, sig in signal.get_items():
-            signal_path = session["dir"] / (name + augment_str)
-            save_audio(sig, signal_path, session["audio_meta"])
 
-    load_augment = json.loads(request.args.get("augment", 'true').lower())
-
-    if request.method == "POST":
-        json_data = request.get_json()
-
-        print(session.get("signal_augmented"), " augmented signal")
-        signal = session.get("signal_augmented", session["signal"])
-        signal = augment_data(Augment(), signal, json_data, session["audio_meta"])
-
-        _save_all(signal, augmented=True)
-        session["signal_augmented"] = signal
-        return redirect(url_for("main.augment"))
-
-    elif request.method == "GET":
-        session_signal_name = "signal"
-
+    print("CALL TO AUGMENT")
+    if request.method == "GET":
+        print("GET REQUEST")
         if session.get("signal") is None:
+            print("GET AUDIO")
             audio_path = session.get("audio_path")
             #separator = load_separator("spleeter", stems=session.get("stem", 2))
             #signal = separator.separate(audio_path.as_posix())
@@ -79,25 +68,33 @@ def augment():
                 signal = pickle.load(f)
             session["signal"] = signal
             _save_all(signal)
-        elif load_augment:
-            session_signal_name += "_augmented"
-        else:
-            print("POPPING AUGMENTED")
-            session.pop("signal_augmented", None)
+            print("SAVING")
 
-        signal = session.get(session_signal_name, session.get("signal"))
+        signal = session.get("signal")
         names = signal.get_names()
-        if "signal_augmented" in session and load_augment:
-            names = [f"{n}_augmented" for n in names]
 
     return render_template("augment.html", title="Augment",
                            names=names, dir=f"/main/data/{session['dir'].stem}",
                            augment=AugmentSignalForm().augment)
 
+@main.route("/augmented", methods=["POST"])
+def augmented():
+    json_data = request.get_json()
+
+    print(session.get("signal_augmented"), " augmented signal")
+    signal = session.get("signal_augmented", session["signal"])
+    signal = augment_data(Augment(), signal, json_data, session["audio_meta"])
+
+    _save_all(signal, augmented=True)
+    session["signal_augmented"] = signal
+    return {"augmentation": "success"}
+
 @main.after_request
 def after_request(response):
-    header = response.headers
-    header['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    response.headers['Cache-Control'] = 'public, max-age=0'
     return response
 
 @main.route("/main/data/<path:subpath>")

@@ -19,6 +19,7 @@ class AudioMeta:
 
 def save_audio_from_storage(file_storage, dir_name):
     dir_name.mkdir()
+    (dir_name / "augmented").mkdir()
 
     name = dir_name / secure_filename(file_storage.filename)
     with open(name, 'w+b') as f:
