@@ -17,7 +17,8 @@ from separator import Config
 from separator.main.augment import Augment
 from separator.main.separate import SpleeterSeparator
 from separator.main import UploadForm, AugmentForm, AugmentSignalForm
-from separator.main import save_audio, save_audio_from_storage, augment_data
+from separator.main import (save_audio, save_audio_from_storage, augment_data,
+                            store_combined_signal)
 
 main = Blueprint(name="main", import_name=__name__)
 
@@ -55,11 +56,8 @@ def _save_all(signal, augmented=False):
 @main.route("/augment", methods=["GET"])
 def augment():
 
-    print("CALL TO AUGMENT")
     if request.method == "GET":
-        print("GET REQUEST")
         if session.get("signal") is None:
-            print("GET AUDIO")
             audio_path = session.get("audio_path")
             #separator = load_separator("spleeter", stems=session.get("stem", 2))
             #signal = separator.separate(audio_path.as_posix())
@@ -68,7 +66,6 @@ def augment():
                 signal = pickle.load(f)
             session["signal"] = signal
             _save_all(signal)
-            print("SAVING")
 
         signal = session.get("signal")
         names = signal.get_names()
@@ -87,6 +84,8 @@ def augmented():
 
     _save_all(signal, augmented=True)
     session["signal_augmented"] = signal
+
+    store_combined_signal(signal, session["dir"], session["audio_meta"])
     return {"augmentation": "success"}
 
 @main.after_request
@@ -99,4 +98,6 @@ def after_request(response):
 
 @main.route("/main/data/<path:subpath>")
 def get_audio(subpath):
-    return send_from_directory("main/data", subpath)
+    return send_from_directory("main/data", subpath, mimetype="audio/mpeg",
+                               attachment_filename=Path(subpath).name,
+                               as_attachment=True)

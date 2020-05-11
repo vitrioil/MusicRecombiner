@@ -85,3 +85,11 @@ def augment_copy(augment, params, sample_rate):
                                sample_rate=sample_rate)
     return augment
 
+def store_combined_signal(signal, session_path, audio_meta):
+    signals = []
+    for _, s in signal.get_items():
+        signals.append(s)
+    combined = np.mean(signals, axis=0)
+    librosa.output.write_wav(session_path / "combined.wav", np.asfortranarray(combined),
+                             sr=audio_meta.sample_rate)
+

@@ -518,6 +518,13 @@ function addListeners() {
 		}
 	}
 
+	var downloadCombinedButton = document.querySelector("#download-augment");
+	if(downloadCombinedButton != null) {
+		downloadCombinedButton.onclick = function() {
+			downloadCombined(this);
+		}
+	}
+
 }
 
 function toggleModalClasses(name) {
@@ -680,6 +687,27 @@ function loadOriginal(loadButton, signalNames) {
 	loadButton.classList.remove("is-loading");
 
 	CommandStore.reloadChangedSignalName();
+}
+
+function downloadCombined(button) {
+	button.classList.add("is-loading");
+
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', CommandStore.sessionName+'/combined.wav');
+	xhr.responseType = "blob";
+	xhr.onload = function (event) {
+		var blob = xhr.response;
+		var link = document.createElement('a');
+		var fileName = xhr.getResponseHeader('Content-Disposition').split("filename=")[1];
+		link.href = window.URL.createObjectURL(blob);
+		link.download = fileName;
+		link.click();
+	};
+	xhr.send();
+
+	xhr.onreadystatechange = function() {
+		button.classList.remove("is-loading");
+	}
 }
 
 function getLastItem(arr) {
