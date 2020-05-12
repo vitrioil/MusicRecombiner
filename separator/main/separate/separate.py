@@ -43,13 +43,18 @@ class SpleeterSeparator(ABCSeparator):
         chunks = []
         length = len(waveform) // sr
         remainder = len(waveform) % sr
+        print(len(waveform), len(waveform) / sr)
         for c in range(0, length, self.chunk_size):
+            print(c)
             chunk = waveform[c*sr: (c+self.chunk_size)*sr]
+            print(len(chunk))
             yield chunk
-
+        """
         if remainder:
             chunk = waveform[(c + 1)*sr + remainder:]
+            print(len(chunk), "remainder")
             yield chunk
+        """
 
     def separate(self, audio: Union[str, np.ndarray], sample_rate=44_100):
         """Separate audio into specified stems.
@@ -74,6 +79,7 @@ class SpleeterSeparator(ABCSeparator):
         else:
             waveform, _ = self._audio_adapter.load(audio, sample_rate=sample_rate)
 
+        print(waveform.shape)
         #predict in chunks
         prediction = {}
         for chunk in self._chunk(waveform, sample_rate):
@@ -86,6 +92,7 @@ class SpleeterSeparator(ABCSeparator):
 
         #merge chunk prediction
         prediction = {k: np.vstack(v) for k, v in prediction.items()}
+        print(list(v.shape for v in prediction.values()))
         signal = Signal(prediction.keys(), prediction.values())
 
         return signal

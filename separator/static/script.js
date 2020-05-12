@@ -299,9 +299,9 @@ function loadWave(dir, name, augmented) {
 	var suffixUrl;
 	//Load the waveform
 	if(augmented) {
-		 suffixUrl = `${dir}/augmented/${name}.wav`;
+		 suffixUrl = `${dir}/augmented/${name}.mp3`;
 	} else {
-		suffixUrl = `${dir}/${name}.wav`;
+		suffixUrl = `${dir}/${name}.mp3`;
 	}
 	url += suffixUrl;
 	wavesurfer.load(url);

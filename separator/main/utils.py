@@ -1,3 +1,4 @@
+import subprocess
 from pathlib import Path
 
 import librosa
@@ -43,7 +44,11 @@ def save_audio(audio, path, audio_meta):
     #                             sample_width=audio_meta.sample_width,
     #                             channels=audio_meta.channels)
     #audio_segment.export(path.as_posix() + audio_meta.ext, format=audio_meta.ext[1:])
-    librosa.output.write_wav(path.as_posix()+".wav", np.asfortranarray(audio), sr=audio_meta.sample_rate)
+    file_path = path.as_posix()
+    librosa.output.write_wav(file_path+".wav", np.asfortranarray(audio), sr=audio_meta.sample_rate)
+    #stupid method to convert wav array into mp3
+    subprocess.Popen(f"ffmpeg -i {file_path}.wav {file_path}.mp3", shell=True, stdout=subprocess.PIPE,
+                     stderr=subprocess.PIPE).communicate()
 
 def augment_data(augment, signal, json, audio_metadata):
     sample_rate = audio_metadata.sample_rate
