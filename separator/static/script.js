@@ -118,11 +118,22 @@ class CommandStore {
 	}
 
 	static storeWavesurfer(name, wavesurfer) {
-		this.cacheWave[name] = wavesurfer;
+		this.cacheWave[name] = {"Wave": wavesurfer};
 	}
 
 	static getWavesurfer(name) {
-		return this.cacheWave[name];
+		if(this.cacheWave[name] == null) {
+			return null;
+		}
+		return this.cacheWave[name]["Wave"];
+	}
+
+	static storeWavesurferUrl(name, url) {
+		this.cacheWave[name]["URL"] = url;
+	}
+
+	static getWavesurferUrl(name) {
+		return this.cacheWave[name]["URL"];
 	}
 
 }
@@ -281,15 +292,20 @@ function loadWave(dir, name, augmented) {
 					container: '#wave-timeline-' + name
 				})]
 			});
+		CommandStore.storeWavesurfer(name, wavesurfer);
 	}
 
+	var url = `http://192.168.0.107:5000`;
+	var suffixUrl;
 	//Load the waveform
 	if(augmented) {
-		wavesurfer.load(`http://192.168.0.107:5000${dir}/augmented/${name}.wav`);
+		 suffixUrl = `${dir}/augmented/${name}.wav`;
 	} else {
-		wavesurfer.load(`http://192.168.0.107:5000${dir}/${name}.wav`);
+		suffixUrl = `${dir}/${name}.wav`;
 	}
-
+	url += suffixUrl;
+	wavesurfer.load(url);
+	CommandStore.storeWavesurferUrl(name, suffixUrl);
 	return wavesurfer;
 }
 
@@ -310,8 +326,6 @@ document.addEventListener("DOMContentLoaded", function() {
 		//Initialize storage for particular signal
 		CommandStore.initStorage(name);
 		CommandStore.storeSessionName(dir);
-		CommandStore.storeWavesurfer(name, wavesurfer);
-
 	}
 });
 
@@ -518,10 +532,19 @@ function addListeners() {
 		}
 	}
 
+	var downloadButtons = document.querySelectorAll(".download-stem");
+	downloadButtons.forEach(d => {
+		d.onclick = function(){
+			var name = getLastItem(d.getAttribute("id").split('-'));
+			var url = CommandStore.getWavesurferUrl(name);
+			downloadAudio(d, url);
+		};
+	});
+
 	var downloadCombinedButton = document.querySelector("#download-augment");
 	if(downloadCombinedButton != null) {
 		downloadCombinedButton.onclick = function() {
-			downloadCombined(this);
+			downloadAudio(this, CommandStore.sessionName+'/combined.wav');
 		}
 	}
 
@@ -689,11 +712,11 @@ function loadOriginal(loadButton, signalNames) {
 	CommandStore.reloadChangedSignalName();
 }
 
-function downloadCombined(button) {
+function downloadAudio(button, url) {
 	button.classList.add("is-loading");
 
 	var xhr = new XMLHttpRequest();
-	xhr.open('GET', CommandStore.sessionName+'/combined.wav');
+	xhr.open('GET', url);//CommandStore.sessionName+'/combined.wav');
 	xhr.responseType = "blob";
 	xhr.onload = function (event) {
 		var blob = xhr.response;

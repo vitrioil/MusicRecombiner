@@ -59,11 +59,11 @@ def augment():
     if request.method == "GET":
         if session.get("signal") is None:
             audio_path = session.get("audio_path")
-            #separator = load_separator("spleeter", stems=session.get("stem", 2))
-            #signal = separator.separate(audio_path.as_posix())
-            import pickle
-            with open("signal.pkl", 'rb') as f:
-                signal = pickle.load(f)
+            separator = load_separator("spleeter", stems=session.get("stem", 2))
+            signal = separator.separate(audio_path.as_posix())
+            #import pickle
+            #with open("signal.pkl", 'rb') as f:
+            #    signal = pickle.load(f)
             session["signal"] = signal
             _save_all(signal)
 

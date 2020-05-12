@@ -20,45 +20,56 @@
 			</div>
 		</div>
 
-		<div class="tile columns box has-background-info">
+		<div class="tile columns box has-background-info is-ancestor">
 
-			<div class="tile column is-centered is-vertical">
-				<button id={{"button-backward-"~name}} class="tile button is-info column is-block m-5 p-3 is-rounded button-backward-wave">
-					<i class="fa fa-step-backward"></i>
-				</button>
+			<div class="tile column is-vertical is-1">
+				<div class="tile columns">
+					<div class="tile column is-vertical is-parent">
+						<button type="button" id={{"reload-original-"~name}} class="tile button is-info is-rounded toggle-modal is-child" href="">
+							<i class="fa fa-undo"></i>
+						</button>
 
-				<button id={{"button-"~name}} class="tile button is-info column is-block m-5 p-3 is-rounded button-play-wave">
-					<i class="fa fa-play"></i>
-					<i class="fa fa-pause"></i>
-				</button>
+						<button id={{"button-backward-"~name}} class="tile button is-info is-rounded button-backward-wave is-child">
+							<i class="fa fa-step-backward"></i>
+						</button>
 
-				<button id={{"button-stop-"~name}} class="tile button is-info column is-block m-5 p-3 is-rounded button-stop-wave">
-					<i class="fa fa-stop"></i>
-				</button>
+						<button id={{"button-"~name}} class="tile button is-info is-rounded button-play-wave is-child">
+							<i class="fa fa-play"></i>
+						</button>
 
-				<button id={{"button-forward-"~name}} class="tile button is-info column is-block m-5 p-3 is-rounded button-forward-wave">
-					<i class="fa fa-step-forward"></i>
-				</button>
+						<button id={{"button-stop-"~name}} class="tile button is-info is-rounded button-stop-wave is-child">
+							<i class="fa fa-stop"></i>
+						</button>
 
-			</div>
+						<button id={{"button-forward-"~name}} class="tile button is-info is-rounded button-forward-wave is-child">
+							<i class="fa fa-step-forward"></i>
+						</button>
+					</div>
 
-			<div class="tile column is-vertical">
-				<button type="button" id={{"toggle-modal-"~name}} class="button is-rounded toggle-modal is-info" href="">
-					<i class="fa fa-bars"></i>
-				</button>
-				<div class="tile column is-flex jty-ctr m-10 p-3">
-					<input id={{"slider-"~name}} data-action="zoom" type="range" min="1" max="200" value="0" class="slider" orient="vertical"/>
+					<div class="tile is-vertical is-parent">
+						<button type="button" id={{"toggle-modal-"~name}} class="tile button is-rounded toggle-modal is-info is-child" href="">
+							<i class="fa fa-bars"></i>
+						</button>
+						<button type="button" id={{"download-"~name}} class="tile button is-rounded toggle-modal is-info is-child download-stem" href="">
+							<i class="fa fa-download"></i>
+						</button>
+						<div class="tile column is-flex jty-ctr m-10 p-3 is-child">
+							<input id={{"slider-"~name}} data-action="zoom" type="range" min="1" max="200" value="0" class="slider" orient="vertical"/>
+						</div>
+					</div>
 				</div>
+
 			</div>
 
-			<div class="tile column is-vertical is-11">
-				<div class="tile is-block ctr-lbl">{{name}}</div>
-				<div id={{"waveform-"~name}} class="tile is-block waveform m-5 p-3" name={{name}} dir={{dir}}>
+
+			<div class="tile column is-vertical is-11 is-parent">
+				<div class="tile is-block ctr-lbl is-child">{{name}}</div>
+				<div id={{"waveform-"~name}} class="tile is-block waveform m-5 p-3 is-child" name={{name}} dir={{dir}}>
 					<div class="progress progress-striped active" id={{"progress-bar-"~name}}>
 						<progress class="progress is-small is-primary" max="100">15%</progress>
 					</div>
 				</div>
-				<div id={{"wave-timeline-"~name}} class="tile is-block m-5 p-3"></div>
+				<div id={{"wave-timeline-"~name}} class="tile is-block m-5 p-3 is-child"></div>
 			</div>
 
 
