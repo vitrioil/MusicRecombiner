@@ -9,7 +9,7 @@ class Config:
     SESSION_TYPE = os.environ.get("SESSION_TYPE", "filesystem")
     AUDIO_PATH = Path("data")
     SEND_FILE_MAX_AGE_DEFAULT = 0
-    SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI", "sqlite:///storage.db")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI", "postgresql:///music_recombiner")
 
     AUDIO_PATH.mkdir(exist_ok=True)
 

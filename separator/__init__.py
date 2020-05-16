@@ -15,8 +15,8 @@ def create_config_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    session.init_app(app)
     db.init_app(app)
+    session.init_app(app)
 
     from separator.main.routes import main
 
