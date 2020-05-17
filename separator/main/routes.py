@@ -15,21 +15,18 @@ from flask import Blueprint, session, redirect, url_for
 # package import
 from separator import Config, db
 from separator.main.augment import Augment
-from separator.main.separate import SpleeterSeparator
+from separator.models import Session, Music
 from separator.main import gen_session, gen_music, gen_storage
 from separator.main import UploadForm, AugmentForm, AugmentSignalForm
 from separator.main import (save_audio, save_audio_from_storage,
-                            store_combined_signal)
+                            store_combined_signal, split_or_load_signal)
 
 main = Blueprint(name="main", import_name=__name__)
 
-def load_separator(separator_name: str, *args, **kwargs):
-
-    if separator_name.lower() == "spleeter":
-        separator = SpleeterSeparator(*args, **kwargs)
-
-    return separator
-
+def _load_session(music_id, stem):
+    get_data = lambda x, s: {"music_id": x, "music_name": Path(Music.query.get(x).file_path).name,
+                             "stem": s}
+    return [get_data(m, stem) for m in music_id]
 
 @main.route('/', methods=["GET", "POST"])
 def home():
@@ -47,33 +44,36 @@ def home():
         gen_music(session, audio_file)
 
         return redirect(url_for("main.augment"))
-    return render_template("home.html", form=form, title="Home")
 
-def _save_all(signal, augmented=False):
-    augment_str = "augmented" if augmented else ''
-    for name, sig in signal.get_items():
-        signal_path = session["dir"] / augment_str / name
-        save_audio(sig, signal_path, session["audio_meta"])
+    previous_session = None
+    if session.get("music_id") is not None:
+        # get stuff
+        music_id = session["music_id"]
+        stem = session["stem"]
+        previous_session = _load_session(music_id, stem)
+    return render_template("home.html", form=form, title="Home",
+                           previous_session=previous_session)
 
 @main.route("/augment", methods=["GET"])
 def augment():
-    if request.method == "GET":
-        if session.get("signal") is None:
-            audio_path = session.get("audio_path")
-            #separator = load_separator("spleeter", stems=session.get("stem", 2))
-            #signal = separator.separate(audio_path.as_posix())
-            import pickle
-            with open("signal.pkl", 'rb') as f:
-                signal = pickle.load(f)
-            session["signal"] = signal
-            _save_all(signal)
+    music_id = request.args.get("music_id")
+    stem = request.args.get("stem", session["stem"])
+    session_id = session["session_id"]
 
-        signal = session.get("signal")
-        names = signal.get_names()
+    if music_id is not None:
+        music = Music.query.get_or_404(music_id)
+    else:
+        music = Music.query.get_or_404(session["music_id"])
+    #after getting music, get file path
+    file_path = music.file_path
+    #now split or load
+    names, dir_name, new_split = split_or_load_signal(file_path, stem, session_id,
+                                                      session)
 
     return render_template("augment.html", title="Augment",
-                           names=names, dir=f"/main/data/{session['dir'].stem}",
-                           augment=AugmentSignalForm().augment)
+                           names=names, dir=dir_name,
+                           augment=AugmentSignalForm().augment,
+                           new_split=new_split)
 
 @main.route("/augmented", methods=["POST"])
 def augmented():
@@ -84,7 +84,6 @@ def augmented():
     json_data = request.get_json()
     signal= gen_storage(session, session_id, music_id, json_data, Augment(), signal)
 
-    _save_all(signal, augmented=True)
     session["signal_augmented"] = signal
     store_combined_signal(signal, session["dir"], session["audio_meta"])
     return {"augmentation": "success"}

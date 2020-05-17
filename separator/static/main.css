@@ -125,3 +125,7 @@ main {
 .hidden {
 	display: none !important;
 }
+
+.no-border {
+	border: none !important;
+}

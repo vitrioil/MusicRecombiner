@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 
 #package import
 from separator import db
+from separator.main.separate import SpleeterSeparator
 from separator.models import  (Session, Storage, Music, Command,
                         Volume, Copy)
 
@@ -27,6 +28,7 @@ class AudioMeta:
 def save_audio_from_storage(file_storage, dir_name):
     dir_name.mkdir()
     (dir_name / "augmented").mkdir()
+    (dir_name / "original").mkdir()
 
     name = dir_name / secure_filename(file_storage.filename)
     with open(name, 'w+b') as f:
@@ -105,6 +107,7 @@ def gen_storage(session, session_id, music_id, data, augment, signal):
 
     signal = gen_command(session, data, storage_id, augment, signal)
     db.session.commit()
+    _save_all(signal, session, augmented=True)
     return signal
 
 def gen_command(session, data, storage_id, augment, signal):
@@ -168,3 +171,35 @@ def store_copy_attr(params, sample_rate, cmd_id, signal_base_name, augment):
         augment = augment.copy(interval=(start, end), copy_start=copy_start,
                                sample_rate=sample_rate)
     return augment
+
+def _save_all(signal, session, augmented=False):
+    augment_str = "augmented" if augmented else 'original'
+    for name, sig in signal.get_items():
+        signal_path = session["dir"] / augment_str / name
+        save_audio(sig, signal_path, session["audio_meta"])
+
+def load_separator(separator_name: str, *args, **kwargs):
+
+    if separator_name.lower() == "spleeter":
+        separator = SpleeterSeparator(*args, **kwargs)
+
+    return separator
+
+def split_or_load_signal(file_path, stem, session_id, session):
+    file_path = Path(file_path)
+    base_dir = file_path.parent
+    split_files = list((base_dir / "original").rglob("*mp3"))
+    audio_dir = f"/main/data/{session_id}"
+    new_split = True
+    if len(split_files) == stem:
+        print("CACHING SPLIT")
+        new_split = False
+        # no need to split
+        return [s.stem for s in split_files], audio_dir, new_split
+    #else split and save
+    separator = load_separator("spleeter", stem)
+    signal = separator.separate(file_path.as_posix())
+    print("BIG OOF SPLITTING OVER")
+    session["signal"] = signal
+    _save_all(signal, session)
+    return signal.get_names(), audio_dir, new_split

@@ -301,7 +301,7 @@ function loadWave(dir, name, augmented) {
 	if(augmented) {
 		 suffixUrl = `${dir}/augmented/${name}.mp3`;
 	} else {
-		suffixUrl = `${dir}/${name}.mp3`;
+		suffixUrl = `${dir}/original/${name}.mp3`;
 	}
 	url += suffixUrl;
 	wavesurfer.load(url);
@@ -313,13 +313,17 @@ document.addEventListener("DOMContentLoaded", function() {
 	//Initialize all listeners
 	addListeners();
 
+	var loadAug = !JSON.parse(document.querySelector("#hidden-split").getAttribute("newSplit").toLowerCase());
+	if (loadAug && !location.href.match(/\?./)) {
+		loadAug = false;
+	}
 	var waves = document.getElementsByClassName("waveform")
 	for (wav of waves) {
 		//For each waveform setup the page
 		name = wav.getAttribute("name");
 		dir = wav.getAttribute("dir");
 
-		var wavesurfer = loadWave(dir, name, false);
+		var wavesurfer = loadWave(dir, name, loadAug);
 
 		//Object specific listeners
 		setValues(wavesurfer, name);
@@ -548,6 +552,13 @@ function addListeners() {
 		}
 	}
 
+	var toggleUploadButton = document.querySelector("#toggle-upload-button");
+	if(toggleUploadButton != null) {
+		toggleUploadButton.onclick = toggleUploadForm;
+	}
+
+	loadPreviousSession();
+
 }
 
 function toggleModalClasses(name) {
@@ -716,7 +727,7 @@ function downloadAudio(button, url) {
 	button.classList.add("is-loading");
 
 	var xhr = new XMLHttpRequest();
-	xhr.open('GET', url);//CommandStore.sessionName+'/combined.wav');
+	xhr.open('GET', url);
 	xhr.responseType = "blob";
 	xhr.onload = function (event) {
 		var blob = xhr.response;
@@ -731,6 +742,24 @@ function downloadAudio(button, url) {
 	xhr.onreadystatechange = function() {
 		button.classList.remove("is-loading");
 	}
+}
+
+function toggleUploadForm() {
+	var hidden = document.querySelector(".card-content.hidden");
+	var visible = document.querySelector(".card-content:not(.hidden)");
+	hidden.classList.remove("hidden");
+	visible.classList.add("hidden");
+}
+
+function loadPreviousSession() {
+	var loadSessionButtons = document.querySelectorAll(".session-load-button");
+	loadSessionButtons.forEach(lB => {
+		var m_id = lB.getAttribute("music_id");
+		lB.onclick = (function(mid) {
+		return function() {
+			location.href = `/augment?music_id=${mid}`;
+		}})(m_id);
+	});
 }
 
 function getLastItem(arr) {
