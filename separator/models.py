@@ -22,7 +22,7 @@ class Storage(db.Model):
     session_id = db.Column(UUID(as_uuid=True), db.ForeignKey("session.session_id"))
     music_id = db.Column(UUID(as_uuid=True), db.ForeignKey("music.music_id"))
 
-    command = db.relationship("Command", backref="storage", lazy="dynamic")
+    command = db.relationship("Command", backref="storage", lazy="select")
 
     def __str__(self):
         return f"Storage:[{self.storage_id}], Session:[{self.session_id}], Music:[{self.music_id}]"
@@ -38,7 +38,7 @@ class Music(db.Model):
     channels = db.Column(db.Integer, nullable=False, default=2)
     sample_width = db.Column(db.Integer, nullable=False)
 
-    storage = db.relationship("Storage", backref="music", lazy="dynamic")
+    storage = db.relationship("Storage", backref="music", lazy="select")
 
     def __str__(self):
         return f"Music:[{self.music_id}], sr:[{self.sample_rate}], duration:[{self.duration}s], channels:[{self.channels}]"

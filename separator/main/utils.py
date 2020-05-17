@@ -26,11 +26,13 @@ class AudioMeta:
         self.ext = ext
 
 def save_audio_from_storage(file_storage, dir_name):
-    dir_name.mkdir()
-    (dir_name / "augmented").mkdir()
-    (dir_name / "original").mkdir()
+    file_name = secure_filename(file_storage.filename)
+    dir_name.mkdir(exist_ok=True)
+    file_stem = Path(file_name).stem
+    (dir_name / file_stem / "augmented").mkdir(parents=True)
+    (dir_name / file_stem / "original").mkdir(parents=True)
 
-    name = dir_name / secure_filename(file_storage.filename)
+    name = dir_name / file_name
     with open(name, 'w+b') as f:
         file_storage.save(f)
 
@@ -107,7 +109,9 @@ def gen_storage(session, session_id, music_id, data, augment, signal):
 
     signal = gen_command(session, data, storage_id, augment, signal)
     db.session.commit()
-    _save_all(signal, session, augmented=True)
+
+    file_stem = Path(Music.query.get(music_id).file_path).stem
+    _save_all(signal, session, file_stem, augmented=True)
     return signal
 
 def gen_command(session, data, storage_id, augment, signal):
@@ -172,10 +176,10 @@ def store_copy_attr(params, sample_rate, cmd_id, signal_base_name, augment):
                                sample_rate=sample_rate)
     return augment
 
-def _save_all(signal, session, augmented=False):
+def _save_all(signal, session, file_stem, augmented=False):
     augment_str = "augmented" if augmented else 'original'
     for name, sig in signal.get_items():
-        signal_path = session["dir"] / augment_str / name
+        signal_path = session["dir"] / file_stem / augment_str / name
         save_audio(sig, signal_path, session["audio_meta"])
 
 def load_separator(separator_name: str, *args, **kwargs):
@@ -188,7 +192,8 @@ def load_separator(separator_name: str, *args, **kwargs):
 def split_or_load_signal(file_path, stem, session_id, session):
     file_path = Path(file_path)
     base_dir = file_path.parent
-    split_files = list((base_dir / "original").rglob("*mp3"))
+    file_stem = file_path.stem
+    split_files = list((base_dir / file_stem / "original").rglob("*mp3"))
     audio_dir = f"/main/data/{session_id}"
     new_split = True
     if len(split_files) == stem:
@@ -201,5 +206,5 @@ def split_or_load_signal(file_path, stem, session_id, session):
     signal = separator.separate(file_path.as_posix())
     print("BIG OOF SPLITTING OVER")
     session["signal"] = signal
-    _save_all(signal, session)
+    _save_all(signal, session, file_stem)
     return signal.get_names(), audio_dir, new_split

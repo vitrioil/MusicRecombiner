@@ -63,22 +63,36 @@ def augment():
     if music_id is not None:
         music = Music.query.get_or_404(music_id)
     else:
-        music = Music.query.get_or_404(session["music_id"])
+        music = Music.query.get_or_404(session["music_id"][-1])
     #after getting music, get file path
     file_path = music.file_path
     #now split or load
     names, dir_name, new_split = split_or_load_signal(file_path, stem, session_id,
                                                       session)
+    # inform which music file to load
+    file_path = Path(file_path)
+    file_stem = file_path.stem
+    print(file_path.parent)
 
+    music_path = file_path.parent / file_stem
+    # inform whether to load original or augmented audio
+    count_stems = len(list((music_path / "original").rglob("*mp3")))
+    count_augmented_stems = len(list((music_path / "augmented").rglob("*mp3")))
+
+    load_augment = False
+    if count_augmented_stems == count_stems:
+        load_augment = True
     return render_template("augment.html", title="Augment",
                            names=names, dir=dir_name,
                            augment=AugmentSignalForm().augment,
-                           new_split=new_split)
+                           load_augment=load_augment, file_stem=file_stem)
 
 @main.route("/augmented", methods=["POST"])
 def augmented():
-    music_id = session["music_id"][0]
-    session_id = session["session_id"]
+    music_id = request.args.get("music_id")
+    #music_id = session["music_id"][-1]
+    session_id = Music.query.get_or_404(music_id).storage.session_id
+    #session_id = session["session_id"]
     signal = session.get("signal_augmented", session["signal"])
 
     json_data = request.get_json()

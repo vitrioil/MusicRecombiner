@@ -14,6 +14,8 @@ class CommandStore {
 	//version of signal
 	static changedSignalName = [];
 
+	static fileStem;
+
 	static addCommand(name, jsonObject) {
 		/*
 		 * Add command to storage.
@@ -136,6 +138,13 @@ class CommandStore {
 		return this.cacheWave[name]["URL"];
 	}
 
+	static storeFileStem(fileStem) {
+		this.fileStem = fileStem;
+	}
+
+	static getFileStem(fileStem) {
+		return this.fileStem;
+	}
 }
 
 function printStorage() {
@@ -271,7 +280,10 @@ class Copy {
 	}
 }
 
-function loadWave(dir, name, augmented) {
+function loadWave(dir, name, augmented, fileStem) {
+	if(typeof fileStem === "undefined" || typeof fileStem === "null") {
+		fileStem = CommandStore.getFileStem();
+	}
 
 	var wavesurfer = CommandStore.getWavesurfer(name);
 	if(wavesurfer == null) {
@@ -293,15 +305,16 @@ function loadWave(dir, name, augmented) {
 				})]
 			});
 		CommandStore.storeWavesurfer(name, wavesurfer);
+		CommandStore.storeFileStem(fileStem);
 	}
 
 	var url = `http://192.168.0.107:5000`;
 	var suffixUrl;
 	//Load the waveform
 	if(augmented) {
-		 suffixUrl = `${dir}/augmented/${name}.mp3`;
+		 suffixUrl = `${dir}/${fileStem}/augmented/${name}.mp3`;
 	} else {
-		suffixUrl = `${dir}/original/${name}.mp3`;
+		suffixUrl = `${dir}/${fileStem}/original/${name}.mp3`;
 	}
 	url += suffixUrl;
 	wavesurfer.load(url);
@@ -313,17 +326,20 @@ document.addEventListener("DOMContentLoaded", function() {
 	//Initialize all listeners
 	addListeners();
 
-	var loadAug = !JSON.parse(document.querySelector("#hidden-split").getAttribute("newSplit").toLowerCase());
-	if (loadAug && !location.href.match(/\?./)) {
-		loadAug = false;
+	var hiddenSplit = document.querySelector("#hidden-data");
+	var fileStem;
+	var loadAug;
+	if(hiddenSplit != null) {
+		loadAug = JSON.parse(hiddenSplit.getAttribute("loadAugment").toLowerCase());
+		fileStem = hiddenSplit.getAttribute("fileStem");
 	}
-	var waves = document.getElementsByClassName("waveform")
+	var waves = document.querySelectorAll(".waveform");
 	for (wav of waves) {
 		//For each waveform setup the page
 		name = wav.getAttribute("name");
 		dir = wav.getAttribute("dir");
 
-		var wavesurfer = loadWave(dir, name, loadAug);
+		var wavesurfer = loadWave(dir, name, loadAug, fileStem);
 
 		//Object specific listeners
 		setValues(wavesurfer, name);
