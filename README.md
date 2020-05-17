@@ -11,4 +11,7 @@ Work is still in progress.
 
 # Screenshot
 
-![Example](img/example.png "Example")
+![Example](img/mr_login.png "Login Page")
+![Example](img/mr_augment_page.png "Augment Page")
+![Example](img/mr_no_augmentations.png "No Augmentations Modal")
+![Example](img/mr_augmentations.png "Augmentations Modal")
