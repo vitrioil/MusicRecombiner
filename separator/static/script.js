@@ -775,8 +775,16 @@ function downloadAudio(button, url) {
 function toggleUploadForm() {
 	var hidden = document.querySelector(".card-content.hidden");
 	var visible = document.querySelector(".card-content:not(.hidden)");
+	var uploadButton = document.querySelector("#upload-button");
+
 	hidden.classList.remove("hidden");
 	visible.classList.add("hidden");
+
+	if(visible.classList.contains("card-form")) {
+		uploadButton.setAttribute("disabled", true);
+	} else {
+		uploadButton.removeAttribute("disabled");
+	}
 }
 
 function loadPreviousSession() {
