@@ -81,7 +81,7 @@ def gen_session(session, parent_dir):
     db.session.add(session)
     db.session.commit()
 
-def gen_music(session, audio_file):
+def gen_music(session, audio_file, stem):
     music_id = uuid.uuid4()
     audio_path, audio_meta = save_audio_from_storage(audio_file, session["dir"])
 
@@ -90,7 +90,8 @@ def gen_music(session, audio_file):
 
     music = Music(music_id=music_id, file_path=audio_path.as_posix(),
                   sample_rate=audio_meta.sample_rate, duration=audio_meta.duration,
-                  channels=audio_meta.channels, sample_width=audio_meta.sample_width)
+                  channels=audio_meta.channels, sample_width=audio_meta.sample_width,
+                  stem=stem)
 
     db.session.add(music)
     db.session.commit()
@@ -196,15 +197,17 @@ def split_or_load_signal(file_path, stem, session_id, session):
     split_files = list((base_dir / file_stem / "original").rglob("*mp3"))
     audio_dir = f"/main/data/{session_id}"
     new_split = True
+
+    print(file_path, file_stem)
     if len(split_files) == stem:
         print("CACHING SPLIT")
         new_split = False
         # no need to split
         return [s.stem for s in split_files], audio_dir, new_split
+
     #else split and save
     separator = load_separator("spleeter", stem)
     signal = separator.separate(file_path.as_posix())
     print("BIG OOF SPLITTING OVER")
-    session["signal"] = signal
     _save_all(signal, session, file_stem)
     return signal.get_names(), audio_dir, new_split

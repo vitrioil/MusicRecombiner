@@ -1,5 +1,9 @@
 from typing import Iterable
 
+import librosa
+import numpy as np
+from pathlib import Path
+
 
 class Signal:
     """Signal object holds individual separated signals.
@@ -17,7 +21,7 @@ class Signal:
         self.signal = list(signal)
 
         length = set([len(i) for i in self.signal])
-        assert len(length) == 1, "All audio should be of equal length."
+        assert len(length) == 1, f"All audio should be of equal length. {length}"
         self.length = length.pop()
 
         self.sig_dict = {n: s for n, s in zip(self.signal_names, self.signal)}
@@ -70,3 +74,16 @@ Perhaps used an incorrect stem? Current stem: {self.stems}""")
     def __len__(self):
         return self.stems
 
+    @staticmethod
+    def load_from_path(path, alt_path, sr, ext="wav"):
+        print(path, alt_path)
+        audio_files = list(Path(path).rglob(f"*{ext}"))
+        if len(audio_files) == 0:
+            audio_files = list(Path(alt_path).rglob(f"*{ext}"))
+
+        items = {}
+        for audio in audio_files:
+            name = audio.stem
+            audio_wav, _ = librosa.load(audio, sr=sr)
+            items[name] = audio_wav
+        return Signal(items.keys(), items.values())

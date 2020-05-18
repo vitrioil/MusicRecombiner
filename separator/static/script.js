@@ -15,6 +15,7 @@ class CommandStore {
 	static changedSignalName = [];
 
 	static fileStem;
+	static musicID;
 
 	static addCommand(name, jsonObject) {
 		/*
@@ -144,6 +145,14 @@ class CommandStore {
 
 	static getFileStem(fileStem) {
 		return this.fileStem;
+	}
+
+	static storeMusicId(musicID) {
+		this.musicID = musicID;
+	}
+
+	static getMusicID() {
+		return this.musicID;
 	}
 }
 
@@ -329,9 +338,12 @@ document.addEventListener("DOMContentLoaded", function() {
 	var hiddenSplit = document.querySelector("#hidden-data");
 	var fileStem;
 	var loadAug;
+	var musicID;
 	if(hiddenSplit != null) {
 		loadAug = JSON.parse(hiddenSplit.getAttribute("loadAugment").toLowerCase());
 		fileStem = hiddenSplit.getAttribute("fileStem");
+		musicID = hiddenSplit.getAttribute("musicID");
+		CommandStore.storeMusicId(musicID);
 	}
 	var waves = document.querySelectorAll(".waveform");
 	for (wav of waves) {
@@ -720,7 +732,7 @@ function sendAugmentData() {
 
 	var changedSignalName = CommandStore.updatedSignalNames();
 
-	xhr.open('POST', '/augmented');
+	xhr.open('POST', `/augmented?musicID=${CommandStore.getMusicID()}`);
 	xhr.setRequestHeader('Content-Type', 'application/json');
 	xhr.send(jsonData);
 
@@ -770,10 +782,10 @@ function toggleUploadForm() {
 function loadPreviousSession() {
 	var loadSessionButtons = document.querySelectorAll(".session-load-button");
 	loadSessionButtons.forEach(lB => {
-		var m_id = lB.getAttribute("music_id");
+		var m_id = lB.getAttribute("musicID");
 		lB.onclick = (function(mid) {
 		return function() {
-			location.href = `/augment?music_id=${mid}`;
+			location.href = `/augment?musicID=${mid}`;
 		}})(m_id);
 	});
 }

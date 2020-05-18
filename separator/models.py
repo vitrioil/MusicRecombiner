@@ -37,11 +37,12 @@ class Music(db.Model):
     duration = db.Column(db.Integer, nullable=False)
     channels = db.Column(db.Integer, nullable=False, default=2)
     sample_width = db.Column(db.Integer, nullable=False)
+    stem = db.Column(db.Integer, nullable=False)
 
-    storage = db.relationship("Storage", backref="music", lazy="select")
+    storage = db.relationship("Storage", backref="music", lazy="select", uselist=False)
 
     def __str__(self):
-        return f"Music:[{self.music_id}], sr:[{self.sample_rate}], duration:[{self.duration}s], channels:[{self.channels}]"
+        return f"Music:[{self.music_id}], sr:[{self.sample_rate}], duration:[{self.duration}s], channels:[{self.channels}] Stem:[{self.stem}]"
 
 
 class Command(db.Model):
