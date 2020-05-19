@@ -6,7 +6,7 @@
 	</div>
 	{% for name in names %}
 
-		<div class="modal">
+		<div class="modal modal-show-aug">
 			<div class="modal-background"></div>
 				<div class="modal-card">
 				<header class="modal-card-head">
@@ -146,6 +146,23 @@
 		</form>
 
 	{% endfor %}
+
+	<div class="modal modal-confirm-reload">
+		<div class="modal-background"></div>
+			<div class="modal-card">
+			<header class="modal-card-head">
+				<p class="modal-card-title">Confirm Reload</p>
+				<button id="confirm-modal-cross-reload" class="delete toggle-modal" aria-label="close"></button>
+			</header>
+
+			<section class="modal-card-body"></section>
+
+			<footer class="modal-card-foot">
+				<button id="confirm-modal-continue-reload" class="button is-success toggle-modal">Yes</button>
+				<button id="confirm-modal-cancel-reload" class="button is-success toggle-modal">No</button>
+			</footer>
+		</div>
+	</div>
 
 	<div class="tile is-vertical jty-ctr">
 		<div class="tile level" style="width:30%;">

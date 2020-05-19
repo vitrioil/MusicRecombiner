@@ -532,7 +532,7 @@ function addListeners() {
 	var loadOriginalButton = document.querySelector("#reload-original");
 	if(loadOriginalButton != null) {
 		loadOriginalButton.onclick = function() {
-			loadOriginal(this, CommandStore.changedSignalName);
+			loadOriginal(CommandStore.changedSignalName);
 		};
 	}
 
@@ -585,13 +585,25 @@ function addListeners() {
 		toggleUploadButton.onclick = toggleUploadForm;
 	}
 
+	var confirmModalReloadButtons = document.querySelectorAll(".toggle-modal[id^='confirm-modal']");
+	confirmModalReloadButtons.forEach(c => {
+		c.onclick = toggleConfirmModal;
+	});
+
+	var confirmContinueReloadButton = document.querySelector("#confirm-modal-continue-reload");
+	if(confirmContinueReloadButton != null) {
+		confirmContinueReloadButton.onclick = function() {
+			confirmReloadOriginal(confirmContinueReloadButton, CommandStore.changedSignalName);
+		};
+	}
+
 	loadPreviousSession();
 
 }
 
 function toggleModalClasses(name) {
 	//Retrieve all user commands
-	var modal = document.querySelector(".modal");
+	var modal = document.querySelector(".modal-show-aug");
 
 	var cmdDetails = CommandStore.getCommandDetails(name);
 	if(cmdDetails === null) {
@@ -608,7 +620,7 @@ function toggleModalClasses(name) {
 
 function addTablesToModal(cmdDetails, name) {
 	//Add table as a child to modal-body
-	var modalBody = document.querySelector(".modal-card-body");
+	var modalBody = document.querySelector(".modal-show-aug .modal-card-body");
 	modalBody.innerHTML = "";
 	var subtitle = document.createElement("label");
 	var subtitleText = name.charAt(0).toUpperCase() + name.substr(1);
@@ -743,12 +755,50 @@ function sendAugmentData() {
 	}
 }
 
-function loadOriginal(loadButton, signalNames) {
+function loadOriginal(signalNames) {
+	fillConfirmModal(signalNames);
+	toggleConfirmModal();
+}
+
+function confirmReloadOriginal(loadButton, signalNames) {
 	loadButton.classList.add("is-loading");
 	signalNames.forEach(c => {loadWave(CommandStore.sessionName, c, false)});
+	if(signalNames.length == 0) {
+		for(var name in CommandStore.customStorage) {
+			loadWave(CommandStore.sessionName, name, false);
+		}
+	}
 	loadButton.classList.remove("is-loading");
 
 	CommandStore.reloadChangedSignalName();
+	toggleConfirmModal();
+}
+
+function fillConfirmModal(signalNames) {
+	var confirmModal = document.querySelector(".modal-confirm-reload");
+	var confirmModalBody = document.querySelector(".modal-confirm-reload .modal-card-body");
+	confirmModalBody.innerHTML = "";
+	var displayLabel = document.createElement("label");
+	var displayText;
+	if(signalNames.length == 0) {
+		displayText = "Reloading will bring back the original signal without augmentations. Do you wish to continue?";
+	} else {
+		displayText = "Reload: ";
+		signalNames.forEach(s => {displayText += ` ${s} `});
+		displayText += "?";
+	}
+
+	displayLabel.innerHTML = displayText;
+	confirmModalBody.appendChild(displayLabel);
+}
+
+function toggleConfirmModal() {
+	var confirmModal = document.querySelector(".modal-confirm-reload");
+	if(confirmModal.classList.contains("is-active")) {
+		confirmModal.classList.remove('is-active');
+	} else {
+		confirmModal.classList.add('is-active');
+	}
 }
 
 function downloadAudio(button, url) {
