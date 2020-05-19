@@ -20,7 +20,8 @@ from separator.main import gen_session, gen_music, gen_storage
 from separator.main import (UploadForm, AugmentForm, AugmentSignalForm,
                            Signal)
 from separator.main import (save_audio, save_audio_from_storage,
-                            store_combined_signal, split_or_load_signal)
+                            store_combined_signal, split_or_load_signal,
+                            undo_music)
 
 main = Blueprint(name="main", import_name=__name__)
 
@@ -110,6 +111,14 @@ def augmented():
 
     store_combined_signal(signal, session["dir"], session["audio_meta"])
     return {"augmentation": "success"}
+
+@main.route("/undo", methods=["POST"])
+def undo():
+    json_data = request.get_json()
+    music_id = json_data["musicID"]
+    stem_name = json_data["stemName"]
+    undo_music(music_id, stem_name, session, Augment())
+    return {"undo": "success"}
 
 @main.after_request
 def after_request(response):

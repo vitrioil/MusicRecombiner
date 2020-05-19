@@ -22,7 +22,7 @@ class Storage(db.Model):
     session_id = db.Column(UUID(as_uuid=True), db.ForeignKey("session.session_id"))
     music_id = db.Column(UUID(as_uuid=True), db.ForeignKey("music.music_id"))
 
-    command = db.relationship("Command", backref="storage", lazy="select")
+    command = db.relationship("Command", backref="storage", lazy="select", uselist=False)
 
     def __str__(self):
         return f"Storage:[{self.storage_id}], Session:[{self.session_id}], Music:[{self.music_id}]"
@@ -43,6 +43,27 @@ class Music(db.Model):
 
     def __str__(self):
         return f"Music:[{self.music_id}], sr:[{self.sample_rate}], duration:[{self.duration}s], channels:[{self.channels}] Stem:[{self.stem}]"
+
+
+class Undo(db.Model):
+    __tablename__ = "undo"
+
+    undo_id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    music_id = db.Column(UUID(as_uuid=True), db.ForeignKey("music.music_id"))
+
+    total_augmentations = db.Column(db.Integer, nullable=False)
+    current_augmentations = db.Column(db.Integer, nullable=False)
+    stem_name = db.Column(db.String(20), nullable=False)
+
+    def increment_augmentations(self):
+        self.total_augmentations += 1
+        self.current_augmentations = self.total_augmentations
+
+    def undo_augmentation(self, dec=1):
+        self.current_augmentations -= dec
+
+    def __str__(self):
+        return f"Undo: Music[{self.music_id}], Total Aug[{self.total_augmentations}], Current Aug[{self.current_augmentations}], Stem[{self.stem_name}]"
 
 
 class Command(db.Model):

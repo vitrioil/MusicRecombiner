@@ -597,6 +597,15 @@ function addListeners() {
 		};
 	}
 
+	var undoAugmentButtons = document.querySelectorAll("[id^='reload-original-']");
+	undoAugmentButtons.forEach(u => {
+		var stemName = getLastItem(u.getAttribute("id").split('-'));
+		u.onclick = (function(uButton, sName) {
+		return function() {
+			undoSignal(uButton, sName);
+		}})(u, stemName);
+	});
+
 	loadPreviousSession();
 
 }
@@ -846,6 +855,22 @@ function loadPreviousSession() {
 			location.href = `/augment?musicID=${mid}`;
 		}})(m_id);
 	});
+}
+
+function undoSignal(reloadButton, name) {
+	reloadButton.firstElementChild.classList.add("fa-spinner");
+	var xhr = new XMLHttpRequest();
+	var jsonData = {"stemName": name, "musicID": CommandStore.musicID};
+	jsonData = JSON.stringify(jsonData);
+
+	xhr.open('POST', "/undo");
+	xhr.setRequestHeader('Content-Type', 'application/json');
+	xhr.send(jsonData);
+
+	xhr.onreadystatechange = function() {
+		loadWave(CommandStore.sessionName, name, true);
+		reloadButton.firstElementChild.classList.remove("fa-spinner");
+	}
 }
 
 function getLastItem(arr) {
