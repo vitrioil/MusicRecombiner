@@ -14,6 +14,9 @@ class CommandStore {
 	//version of signal
 	static changedSignalName = [];
 
+	static fileStem;
+	static musicID;
+
 	static addCommand(name, jsonObject) {
 		/*
 		 * Add command to storage.
@@ -136,6 +139,21 @@ class CommandStore {
 		return this.cacheWave[name]["URL"];
 	}
 
+	static storeFileStem(fileStem) {
+		this.fileStem = fileStem;
+	}
+
+	static getFileStem(fileStem) {
+		return this.fileStem;
+	}
+
+	static storeMusicId(musicID) {
+		this.musicID = musicID;
+	}
+
+	static getMusicID() {
+		return this.musicID;
+	}
 }
 
 function printStorage() {
@@ -271,7 +289,10 @@ class Copy {
 	}
 }
 
-function loadWave(dir, name, augmented) {
+function loadWave(dir, name, augmented, fileStem) {
+	if(typeof fileStem === "undefined" || typeof fileStem === "null") {
+		fileStem = CommandStore.getFileStem();
+	}
 
 	var wavesurfer = CommandStore.getWavesurfer(name);
 	if(wavesurfer == null) {
@@ -293,15 +314,16 @@ function loadWave(dir, name, augmented) {
 				})]
 			});
 		CommandStore.storeWavesurfer(name, wavesurfer);
+		CommandStore.storeFileStem(fileStem);
 	}
 
 	var url = `http://192.168.0.107:5000`;
 	var suffixUrl;
 	//Load the waveform
 	if(augmented) {
-		 suffixUrl = `${dir}/augmented/${name}.mp3`;
+		 suffixUrl = `${dir}/${fileStem}/augmented/${name}.mp3`;
 	} else {
-		suffixUrl = `${dir}/${name}.mp3`;
+		suffixUrl = `${dir}/${fileStem}/original/${name}.mp3`;
 	}
 	url += suffixUrl;
 	wavesurfer.load(url);
@@ -313,13 +335,23 @@ document.addEventListener("DOMContentLoaded", function() {
 	//Initialize all listeners
 	addListeners();
 
-	var waves = document.getElementsByClassName("waveform")
+	var hiddenSplit = document.querySelector("#hidden-data");
+	var fileStem;
+	var loadAug;
+	var musicID;
+	if(hiddenSplit != null) {
+		loadAug = JSON.parse(hiddenSplit.getAttribute("loadAugment").toLowerCase());
+		fileStem = hiddenSplit.getAttribute("fileStem");
+		musicID = hiddenSplit.getAttribute("musicID");
+		CommandStore.storeMusicId(musicID);
+	}
+	var waves = document.querySelectorAll(".waveform");
 	for (wav of waves) {
 		//For each waveform setup the page
 		name = wav.getAttribute("name");
 		dir = wav.getAttribute("dir");
 
-		var wavesurfer = loadWave(dir, name, false);
+		var wavesurfer = loadWave(dir, name, loadAug, fileStem);
 
 		//Object specific listeners
 		setValues(wavesurfer, name);
@@ -500,7 +532,7 @@ function addListeners() {
 	var loadOriginalButton = document.querySelector("#reload-original");
 	if(loadOriginalButton != null) {
 		loadOriginalButton.onclick = function() {
-			loadOriginal(this, CommandStore.changedSignalName);
+			loadOriginal(CommandStore.changedSignalName);
 		};
 	}
 
@@ -548,11 +580,40 @@ function addListeners() {
 		}
 	}
 
+	var toggleUploadButton = document.querySelector("#toggle-upload-button");
+	if(toggleUploadButton != null) {
+		toggleUploadButton.onclick = toggleUploadForm;
+	}
+
+	var confirmModalReloadButtons = document.querySelectorAll(".toggle-modal[id^='confirm-modal']");
+	confirmModalReloadButtons.forEach(c => {
+		c.onclick = toggleConfirmModal;
+	});
+
+	var confirmContinueReloadButton = document.querySelector("#confirm-modal-continue-reload");
+	if(confirmContinueReloadButton != null) {
+		confirmContinueReloadButton.onclick = function() {
+			confirmReloadOriginal(confirmContinueReloadButton, CommandStore.changedSignalName);
+		};
+	}
+
+	var shiftAugmentButtons = document.querySelectorAll("[id^='reload-original-']");
+	shiftAugmentButtons.forEach(u => {
+		var stemName = getLastItem(u.getAttribute("id").split('-'));
+		var shift = u.getAttribute("shift");
+		u.onclick = (function(uButton, sName, shft) {
+		return function() {
+			shiftSignal(uButton, sName, shft);
+		}})(u, stemName, shift);
+	});
+
+	loadPreviousSession();
+
 }
 
 function toggleModalClasses(name) {
 	//Retrieve all user commands
-	var modal = document.querySelector(".modal");
+	var modal = document.querySelector(".modal-show-aug");
 
 	var cmdDetails = CommandStore.getCommandDetails(name);
 	if(cmdDetails === null) {
@@ -569,7 +630,7 @@ function toggleModalClasses(name) {
 
 function addTablesToModal(cmdDetails, name) {
 	//Add table as a child to modal-body
-	var modalBody = document.querySelector(".modal-card-body");
+	var modalBody = document.querySelector(".modal-show-aug .modal-card-body");
 	modalBody.innerHTML = "";
 	var subtitle = document.createElement("label");
 	var subtitleText = name.charAt(0).toUpperCase() + name.substr(1);
@@ -693,7 +754,7 @@ function sendAugmentData() {
 
 	var changedSignalName = CommandStore.updatedSignalNames();
 
-	xhr.open('POST', '/augmented');
+	xhr.open('POST', `/augmented?musicID=${CommandStore.getMusicID()}`);
 	xhr.setRequestHeader('Content-Type', 'application/json');
 	xhr.send(jsonData);
 
@@ -704,19 +765,57 @@ function sendAugmentData() {
 	}
 }
 
-function loadOriginal(loadButton, signalNames) {
+function loadOriginal(signalNames) {
+	fillConfirmModal(signalNames);
+	toggleConfirmModal();
+}
+
+function confirmReloadOriginal(loadButton, signalNames) {
 	loadButton.classList.add("is-loading");
 	signalNames.forEach(c => {loadWave(CommandStore.sessionName, c, false)});
+	if(signalNames.length == 0) {
+		for(var name in CommandStore.customStorage) {
+			loadWave(CommandStore.sessionName, name, false);
+		}
+	}
 	loadButton.classList.remove("is-loading");
 
 	CommandStore.reloadChangedSignalName();
+	toggleConfirmModal();
+}
+
+function fillConfirmModal(signalNames) {
+	var confirmModal = document.querySelector(".modal-confirm-reload");
+	var confirmModalBody = document.querySelector(".modal-confirm-reload .modal-card-body");
+	confirmModalBody.innerHTML = "";
+	var displayLabel = document.createElement("label");
+	var displayText;
+	if(signalNames.length == 0) {
+		displayText = "Reloading will bring back the original signal without augmentations. Do you wish to continue?";
+	} else {
+		displayText = "Reload: ";
+		signalNames.forEach(s => {displayText += ` ${s} `});
+		displayText += "?";
+	}
+
+	displayLabel.innerHTML = displayText;
+	confirmModalBody.appendChild(displayLabel);
+}
+
+function toggleConfirmModal() {
+	var confirmModal = document.querySelector(".modal-confirm-reload");
+	if(confirmModal.classList.contains("is-active")) {
+		confirmModal.classList.remove('is-active');
+	} else {
+		confirmModal.classList.add('is-active');
+	}
 }
 
 function downloadAudio(button, url) {
 	button.classList.add("is-loading");
 
 	var xhr = new XMLHttpRequest();
-	xhr.open('GET', url);//CommandStore.sessionName+'/combined.wav');
+	xhr.open('GET', url);
 	xhr.responseType = "blob";
 	xhr.onload = function (event) {
 		var blob = xhr.response;
@@ -730,6 +829,52 @@ function downloadAudio(button, url) {
 
 	xhr.onreadystatechange = function() {
 		button.classList.remove("is-loading");
+	}
+}
+
+function toggleUploadForm() {
+	var hidden = document.querySelector(".card-content.hidden");
+	var visible = document.querySelector(".card-content:not(.hidden)");
+	var uploadButton = document.querySelector("#upload-button");
+
+	hidden.classList.remove("hidden");
+	visible.classList.add("hidden");
+
+	if(visible.classList.contains("card-form")) {
+		uploadButton.setAttribute("disabled", true);
+	} else {
+		uploadButton.removeAttribute("disabled");
+	}
+}
+
+function loadPreviousSession() {
+	var loadSessionButtons = document.querySelectorAll(".session-load-button");
+	loadSessionButtons.forEach(lB => {
+		var m_id = lB.getAttribute("musicID");
+		lB.onclick = (function(mid) {
+		return function() {
+			location.href = `/augment?musicID=${mid}`;
+		}})(m_id);
+	});
+}
+
+function shiftSignal(reloadButton, name, shift) {
+	reloadButton.firstElementChild.classList.add("fa-spinner");
+	reloadButton.firstElementChild.classList.add("fa-pulse");
+	var xhr = new XMLHttpRequest();
+	var jsonData = {"stemName": name, "musicID": CommandStore.musicID,
+			"shift": shift};
+	jsonData = JSON.stringify(jsonData);
+
+	xhr.open('POST', "/shift");
+	xhr.setRequestHeader('Content-Type', 'application/json');
+	xhr.send(jsonData);
+
+	xhr.onreadystatechange = function() {
+		loadWave(CommandStore.sessionName, name, true);
+		reloadButton.firstElementChild.classList.remove("fa-spinner");
+		reloadButton.firstElementChild.classList.remove("fa-pulse");
+		reloadButton.firstElementChild.classList.add("fa-undo");
 	}
 }
 

@@ -6,8 +6,37 @@
 		<div class="card">
 			<header class="card-header">
 				{{ form.audio.label(class="card-header-title jty-ctr") }}
+				<button id="toggle-upload-button" class="button no-border" type="button">
+				<i class="fa fa-bars"></i>
+				</button>
 			</header>
-			<div class="card-content">
+
+			<div class="card-content hidden card-list">
+				<table class="table is-hoverable card-table">
+					{% if previous_session %}
+						<thead>
+							<tr>
+								Previous Saved Sessions.
+							</tr>
+						</thead>
+						<tbody>
+							{% for value in previous_session %}
+								<tr>
+									<td>
+										<button class="button session-load-button" musicID={{value['music_id']}}>{{value["music_name"]}} at {{value["stem"]}} stems.</button>
+									</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+					{% else %}
+						<thead><tr><th>
+						Your Previous Session will be displayed here.
+						</th></tr></thead>
+					{% endif %}
+				</table>
+			</div>
+
+			<div class="card-content card-form">
 				<div class="field">
 					<div class="file is-info has-name jty-ctr" id="file-input-upload">
 						<label class="file-label">
