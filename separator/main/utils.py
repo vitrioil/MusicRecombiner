@@ -1,4 +1,5 @@
 import uuid
+import itertools
 import subprocess
 from pathlib import Path
 
@@ -63,13 +64,13 @@ def save_audio(audio, path, audio_meta):
 
 
 
-def store_combined_signal(signal, session_path, audio_meta):
+def store_combined_signal(signal, session_path, sr):
     signals = []
     for _, s in signal.get_items():
         signals.append(s)
     combined = np.mean(signals, axis=0)
     librosa.output.write_wav(session_path / "combined.wav", np.asfortranarray(combined),
-                             sr=audio_meta.sample_rate)
+                             sr=sr)
 
 def gen_session(session, parent_dir):
     parent_dir.mkdir(exist_ok=True)
@@ -249,21 +250,29 @@ def split_or_load_signal(file_path, stem, session_id, session):
     print("Saved augmentations")
     return signal.get_names(), audio_dir, new_split
 
-def undo_music(music_id, stem_name, session, augment):
+def shift_music(music_id, stem_name, session, augment, delta):
     undo = Undo.query.filter_by(music_id=music_id,
                                  stem_name=stem_name).all()
     assert len(undo) == 1, undo
     undo = undo[0]
-    undo.undo_augmentation()
+    undo.shift_augmentation(delta)
 
     current_augmentations = undo.current_augmentations
 
     storages = Storage.query.filter_by(music_id=music_id).all()
-    commands = [s.command for s in storages]
+    command_ids = [s.command.cmd_id for s in storages]
 
     #apply command only upto first `current_augmentations`
     #to the original signal, which acts as undo
-    commands = commands[:current_augmentations]
+    command_ids = command_ids[:current_augmentations]
+
+    volume_list = [Volume.query.filter_by(cmd_id=c, stem_name=stem_name).all() for c in command_ids]
+    volume_list = itertools.chain.from_iterable(volume_list)
+
+    copy_list = [Copy.query.filter_by(cmd_id=c, stem_name=stem_name).all() for c in command_ids]
+    copy_list = itertools.chain.from_iterable(copy_list)
+
+    commands = {"Volume": volume_list, "Copy": copy_list}
 
     #get original signal
     music = Music.query.get(music_id)
@@ -273,17 +282,16 @@ def undo_music(music_id, stem_name, session, augment):
     signal = Signal.load_from_path(file_path.parent / file_stem / "original",
                                    alt_path=None, sr=sr)
 
-    for current_command in commands:
-        print(current_command.all_commands)
-        for command_name, command in current_command.all_commands.items():
-            print(command_name, str(command))
-            if command_name == "Volume":
-                augment = store_volume_attr(False, sr, augment,
-                                            command)
-            elif command_name == "Copy":
-                augment = store_copy_attr(False, sr, augment,
-                                          command)
+    for command_name, command in commands.items():
+        print(command_name, str(command))
+        if command_name == "Volume":
+            augment = store_volume_attr(False, sr, augment,
+                                        command)
+        elif command_name == "Copy":
+            augment = store_copy_attr(False, sr, augment,
+                                      command)
     augment.augment(signal, stem_name)
     _save_all(signal, session, file_stem, augmented=True)
+    store_combined_signal(signal, session["dir"], sr)
 
     db.session.commit()

@@ -597,13 +597,14 @@ function addListeners() {
 		};
 	}
 
-	var undoAugmentButtons = document.querySelectorAll("[id^='reload-original-']");
-	undoAugmentButtons.forEach(u => {
+	var shiftAugmentButtons = document.querySelectorAll("[id^='reload-original-']");
+	shiftAugmentButtons.forEach(u => {
 		var stemName = getLastItem(u.getAttribute("id").split('-'));
-		u.onclick = (function(uButton, sName) {
+		var shift = u.getAttribute("shift");
+		u.onclick = (function(uButton, sName, shft) {
 		return function() {
-			undoSignal(uButton, sName);
-		}})(u, stemName);
+			shiftSignal(uButton, sName, shft);
+		}})(u, stemName, shift);
 	});
 
 	loadPreviousSession();
@@ -857,19 +858,23 @@ function loadPreviousSession() {
 	});
 }
 
-function undoSignal(reloadButton, name) {
+function shiftSignal(reloadButton, name, shift) {
 	reloadButton.firstElementChild.classList.add("fa-spinner");
+	reloadButton.firstElementChild.classList.add("fa-pulse");
 	var xhr = new XMLHttpRequest();
-	var jsonData = {"stemName": name, "musicID": CommandStore.musicID};
+	var jsonData = {"stemName": name, "musicID": CommandStore.musicID,
+			"shift": shift};
 	jsonData = JSON.stringify(jsonData);
 
-	xhr.open('POST', "/undo");
+	xhr.open('POST', "/shift");
 	xhr.setRequestHeader('Content-Type', 'application/json');
 	xhr.send(jsonData);
 
 	xhr.onreadystatechange = function() {
 		loadWave(CommandStore.sessionName, name, true);
 		reloadButton.firstElementChild.classList.remove("fa-spinner");
+		reloadButton.firstElementChild.classList.remove("fa-pulse");
+		reloadButton.firstElementChild.classList.add("fa-undo");
 	}
 }
 

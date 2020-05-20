@@ -1,6 +1,8 @@
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 
+import numpy as np
+
 #package import
 from separator import db
 
@@ -59,8 +61,10 @@ class Undo(db.Model):
         self.total_augmentations += 1
         self.current_augmentations = self.total_augmentations
 
-    def undo_augmentation(self, dec=1):
-        self.current_augmentations -= dec
+    def shift_augmentation(self, delta=1):
+        self.current_augmentations += delta
+        self.current_augmentations = int(np.clip(self.current_augmentations, 0,
+                                                 self.total_augmentations))
 
     def __str__(self):
         return f"Undo: Music[{self.music_id}], Total Aug[{self.total_augmentations}], Current Aug[{self.current_augmentations}], Stem[{self.stem_name}]"
