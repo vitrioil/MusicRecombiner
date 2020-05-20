@@ -373,6 +373,7 @@ function setValues(wavesurfer, name) {
 	var addCommandButton = document.querySelector("#add-command-"+name);
 	addCommandButton.onclick = function() {
 		commandListener(wavesurfer, name);
+		showNotif(name);
 	}
 
 	//Add progress bar before audio is fully loaded
@@ -876,6 +877,29 @@ function shiftSignal(reloadButton, name, shift) {
 		reloadButton.firstElementChild.classList.remove("fa-pulse");
 		reloadButton.firstElementChild.classList.add("fa-undo");
 	}
+}
+
+function showNotif(name) {
+	var notifText = `${name} augmentation added!`;
+	var notifDiv = document.createElement("div");
+	var notifDeleteButton = document.createElement("button")
+	var notifLabel = document.createElement("label");
+
+	notifLabel.innerHTML = notifText;
+	notifDeleteButton.classList.add("delete");
+	notifDiv.className += "notification is-success notif-item";
+
+	notifDeleteButton.onclick = function() {
+		notifDeleteButton.parentNode.remove();
+	}
+
+	var notifContainer = document.querySelector(".notif-container.notif-pos");
+
+	notifDiv.appendChild(notifDeleteButton);
+	notifDiv.appendChild(notifLabel);
+	notifContainer.appendChild(notifDiv);
+
+	setTimeout(() => {notifDiv.remove()}, 2000);
 }
 
 function getLastItem(arr) {
