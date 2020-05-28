@@ -359,6 +359,11 @@ document.addEventListener("DOMContentLoaded", function() {
 		CommandStore.initStorage(name);
 		CommandStore.storeSessionName(dir);
 	}
+
+	var tool = document.querySelector("#tool-kit");
+	if(waves.length > 2) {
+		tool.classList.add("tool");
+	}
 });
 
 function setValues(wavesurfer, name) {

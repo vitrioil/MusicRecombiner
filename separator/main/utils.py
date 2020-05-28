@@ -12,10 +12,10 @@ from werkzeug.utils import secure_filename
 #package import
 from separator import db
 from separator.main import Signal
+from separator.main import CMD_MAP
 from separator.main.separate import SpleeterSeparator
 from separator.models import (Session, Storage, Music, Command,
-                              Volume, Copy, Undo)
-
+                              Undo)
 
 class AudioMeta:
 
@@ -152,68 +152,11 @@ def store_cmd_attr(json, music, cmd_id, signal, augment, undo):
 
         commands = json.get(audio_name)
         for command_name, command_params in commands.items():
-            if command_name == "Volume":
-                augment = store_volume_attr(True, sample_rate, augment,
-                                            command_params, cmd_id, audio_name)
-            elif command_name == "Copy":
-                augment = store_copy_attr(True, sample_rate, augment,
-                                          command_params, cmd_id, audio_name)
+            store_attr = CMD_MAP[command_name]
+            augment = store_attr(True, sample_rate, augment,
+                                 command_params, cmd_id, audio_name)
         augment.augment(signal, audio_name)
     return signal
-
-def store_volume_attr(from_json, sample_rate, augment, *args, **kwargs):
-    def _retrieve_from_json(params, cmd_id, audio_name):
-        for param in params:
-            start = float(param.get("start"))
-            end = float(param.get("end"))
-            vol = int(param.get("volume", 100)) / 100
-            if vol == 1:
-                continue
-            volume = Volume(vol_id=uuid.uuid4(), cmd_id=cmd_id,
-                            start=start, end=end, volume=vol,
-                            stem_name=audio_name)
-            db.session.add(volume)
-            yield start, end, vol
-
-    def _retrieve_from_db(volume_list):
-        for volume in volume_list:
-            start = volume.start
-            end = volume.end
-            vol = volume.volume
-
-            yield start, end, vol
-
-    _retrieve = _retrieve_from_json if from_json else _retrieve_from_db
-    for start, end, vol in _retrieve(*args, **kwargs):
-        augment = augment.amplitude(interval=(start, end), gain=vol,
-                                    sample_rate=sample_rate)
-    return augment
-
-def store_copy_attr(from_json, sample_rate, augment, *args, **kwargs):
-    def _retrieve_from_json(params, cmd_id, audio_name):
-        for param in params:
-            start = float(param.get("start"))
-            end = float(param.get("end"))
-            copy_start = float(param.get("copyStart"))
-
-            copy = Copy(copy_id=uuid.uuid4(), cmd_id=cmd_id,
-                        start=start, end=end, copy_start=copy_start,
-                        stem_name=audio_name)
-            db.session.add(copy)
-            yield start, end, copy_start
-
-    def _retrieve_from_db(copy_list):
-        for copy in copy_list:
-            start = copy.start
-            end = copy.end
-            copy_start = copy.copy_start
-            yield start, end, copy_start
-
-    _retrieve = _retrieve_from_json if from_json else _retrieve_from_db
-    for start, end, copy_start in _retrieve(*args, **kwargs):
-        augment = augment.copy(interval=(start, end), copy_start=copy_start,
-                               sample_rate=sample_rate)
-    return augment
 
 def _save_all(signal, session, file_stem, augmented=False):
     augment_str = "augmented" if augmented else 'original'
@@ -265,14 +208,7 @@ def shift_music(music_id, stem_name, session, augment, delta):
     #apply command only upto first `current_augmentations`
     #to the original signal, which acts as undo
     command_ids = command_ids[:current_augmentations]
-
-    volume_list = [Volume.query.filter_by(cmd_id=c, stem_name=stem_name).all() for c in command_ids]
-    volume_list = itertools.chain.from_iterable(volume_list)
-
-    copy_list = [Copy.query.filter_by(cmd_id=c, stem_name=stem_name).all() for c in command_ids]
-    copy_list = itertools.chain.from_iterable(copy_list)
-
-    commands = {"Volume": volume_list, "Copy": copy_list}
+    commands = get_command_list(command_ids, stem_name)
 
     #get original signal
     music = Music.query.get(music_id)
@@ -283,15 +219,14 @@ def shift_music(music_id, stem_name, session, augment, delta):
                                    alt_path=None, sr=sr)
 
     for command_name, command in commands.items():
-        print(command_name, str(command))
-        if command_name == "Volume":
-            augment = store_volume_attr(False, sr, augment,
-                                        command)
-        elif command_name == "Copy":
-            augment = store_copy_attr(False, sr, augment,
-                                      command)
+        store_attr = CMD_MAP[command_name]
+        augment = store_attr(False, sr, augment, command)
+
+    print("Re-augmenting...")
     augment.augment(signal, stem_name)
+    print("Done")
     _save_all(signal, session, file_stem, augmented=True)
     store_combined_signal(signal, session["dir"], sr)
 
     db.session.commit()
+

@@ -27,7 +27,8 @@ class Storage(db.Model):
     command = db.relationship("Command", backref="storage", lazy="select", uselist=False)
 
     def __str__(self):
-        return f"Storage:[{self.storage_id}], Session:[{self.session_id}], Music:[{self.music_id}]"
+        return (f"Storage:[{self.storage_id}], Session:[{self.session_id}], "
+                f"Music:[{self.music_id}]")
 
 
 class Music(db.Model):
@@ -44,7 +45,9 @@ class Music(db.Model):
     storage = db.relationship("Storage", backref="music", lazy="select", uselist=False)
 
     def __str__(self):
-        return f"Music:[{self.music_id}], sr:[{self.sample_rate}], duration:[{self.duration}s], channels:[{self.channels}] Stem:[{self.stem}]"
+        return (f"Music:[{self.music_id}], sr:[{self.sample_rate}], "
+                f"duration:[{self.duration}s], "
+                f"channels:[{self.channels}] Stem:[{self.stem}]")
 
 
 class Undo(db.Model):
@@ -67,7 +70,8 @@ class Undo(db.Model):
                                                  self.total_augmentations))
 
     def __str__(self):
-        return f"Undo: Music[{self.music_id}], Total Aug[{self.total_augmentations}], Current Aug[{self.current_augmentations}], Stem[{self.stem_name}]"
+        return (f"Undo: Music[{self.music_id}], Total Aug[{self.total_augmentations}], "
+                f"Current Aug[{self.current_augmentations}], Stem[{self.stem_name}]")
 
 
 class Command(db.Model):
@@ -96,7 +100,8 @@ class Volume(db.Model):
     stem_name = db.Column(db.String(20))
 
     def __str__(self):
-        return f"Volume:[{self.vol_id}], start:[{self.start}], end:[{self.end}], volume:[{self.volume}] for {self.stem_name}"
+        return (f"Volume:[{self.vol_id}], start:[{self.start}], end:[{self.end}], "
+                f"volume:[{self.volume}] for {self.stem_name}")
 
 
 class Copy(db.Model):
@@ -110,5 +115,20 @@ class Copy(db.Model):
     stem_name = db.Column(db.String(20))
 
     def __str__(self):
-        return f"Copy:[{self.copy_id}], start:[{self.start}], end:[{self.end}], copy start:[{self.copy_start}] for {self.stem_name}"
+        return (f"Copy:[{self.copy_id}], start:[{self.start}], end:[{self.end}], "
+                f"copy start:[{self.copy_start}] for {self.stem_name}")
+
+class Overlay(db.Model):
+    __tablename__ = "overlay"
+    overlay_id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True)
+
+    cmd_id = db.Column(UUID(as_uuid=True), db.ForeignKey("command.cmd_id"))
+    start = db.Column(db.Float)
+    end = db.Column(db.Float)
+    overlay_start = db.Column(db.Float)
+    stem_name = db.Column(db.String(20))
+
+    def __str__(self):
+        return (f"Overlay:[{self.overlay_id}], start:[{self.start}], end:[{self.end}], "
+                f"overlay start:[{self.overlay_start}] for {self.stem_name}")
 

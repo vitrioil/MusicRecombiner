@@ -144,5 +144,12 @@ main {
 }
 
 .notif-item {
-	z-index: 4;
+	z-index: 10;
+}
+
+.tool {
+	position: sticky;
+	bottom: 0px;
+	left: 50%;
+	z-index: 10;
 }
