@@ -14,11 +14,11 @@ from flask import Blueprint, session, redirect, url_for
 
 # package import
 from separator import Config, db
+from separator.main import CMD_MAP
 from separator.main.augment import Augment
 from separator.models import Session, Music
 from separator.main import gen_session, gen_music, gen_storage
-from separator.main import (UploadForm, AugmentForm, AugmentSignalForm,
-                           Signal)
+from separator.main import (UploadForm, Signal)
 from separator.main import (save_audio, save_audio_from_storage,
                             store_combined_signal, split_or_load_signal,
                             shift_music)
@@ -89,7 +89,7 @@ def augment():
 
     return render_template("augment.html", title="Augment",
                            names=names, dir=dir_name,
-                           augment=AugmentSignalForm().augment,
+                           augment=list(CMD_MAP.keys()),
                            load_augment=load_augment, file_stem=file_stem,
                            music_id=music_id)
 

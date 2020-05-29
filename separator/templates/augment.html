@@ -113,8 +113,8 @@
 							<div class="field has-addons augment-input" id={{"augment-input-"~name}}>
 								{% for aug in augment %}
 									<div class="control">
-										<button type="button" class="button is-info augment-radio" id={{aug.label.text~'-'~name}}>
-											{{ aug.label }}
+										<button type="button" class="button is-info augment-radio" id={{aug~'-'~name}}>
+											{{ aug }}
 										</button>
 									</div>
 								{% endfor %}
@@ -147,6 +147,16 @@
 
 						<div class="control level-item">
 							<input class="field" id={{"cop-start-"~name}} name={{"cop-start-"~name}} placeholder="Start copy timestamp"/>
+						</div>
+					</nav>
+
+					<nav class="level augment-form augment-form-nest-input ove-input" id={{"augment-ove-input-"~name}}>
+						<div class="control level-item">
+							<div class="subtitle is-5">Overlay Section</div>
+						</div>
+
+						<div class="control level-item">
+							<input class="field" id={{"ove-start-"~name}} name={{"ove-start-"~name}} placeholder="Start overlay timestamp"/>
 						</div>
 					</nav>
 				</div>

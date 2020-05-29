@@ -16,9 +16,9 @@ Work is still in progress.
     4. Add function `store_{cmd_name}_attr` in [cmd_utils.py](separator/main/cmd_utils.py)
     5. Add mapping of command name -> function name in [cmd_utils.py](separator/main/cmd_utils.py)
 2. HTML/JS
-    1. Add input form for command in [augment.html](separator/templates/augment.html)
+    1. Add input form for command in '.augment-form-container' in [augment.html](separator/templates/augment.html). Make sure the first three letter of command name is used inside the class. e.g. 'vol' or 'cop' and make them consistent
     2. Create a class in [script.js](separator/static/script.js)
-
+    3. Add mapping in cmdAttributeMapper() and cmdPrettyMapper()
 # Screenshot
 
 ![Example](img/mr_login.png "Login Page")

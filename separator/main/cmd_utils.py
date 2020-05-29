@@ -1,6 +1,8 @@
 import itertools
+import uuid
 
 # package import
+from separator import db
 from separator.models import Volume, Copy, Overlay
 
 
@@ -66,8 +68,8 @@ def store_overlay_attr(from_json, sample_rate, augment, *args, **kwargs):
             overlay_start = float(param.get("overlayStart"))
 
             overlay = Overlay(overlay_id=uuid.uuid4(), cmd_id=cmd_id,
-                        start=start, end=end, overlay_start=overlay_start,
-                        stem_name=audio_name)
+                              start=start, end=end, overlay_start=overlay_start,
+                              stem_name=audio_name)
             db.session.add(overlay)
             yield start, end, overlay_start
 
@@ -81,7 +83,7 @@ def store_overlay_attr(from_json, sample_rate, augment, *args, **kwargs):
     _retrieve = _retrieve_from_json if from_json else _retrieve_from_db
     for start, end, overlay_start in _retrieve(*args, **kwargs):
         augment = augment.overlay(interval=(start, end), overlay_start=overlay_start,
-                               sample_rate=sample_rate)
+                                  sample_rate=sample_rate)
     return augment
 
 def get_command_list(command_ids, stem_name):

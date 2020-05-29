@@ -12,7 +12,7 @@ from werkzeug.utils import secure_filename
 #package import
 from separator import db
 from separator.main import Signal
-from separator.main import CMD_MAP
+from separator.main import CMD_MAP, get_command_list
 from separator.main.separate import SpleeterSeparator
 from separator.models import (Session, Storage, Music, Command,
                               Undo)
