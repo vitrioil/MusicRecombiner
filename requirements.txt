@@ -4,3 +4,4 @@ flask-session
 flask-wtf
 flask-cors
 flask-sqlalchemy
+pydub
