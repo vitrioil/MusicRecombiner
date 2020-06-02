@@ -555,7 +555,7 @@ function addListeners() {
 		}
 	}
 
-	function enableAugment(form) {
+	function enableAugment(form, li) {
 		/*
 		 * Toggle form based on user click
 		 */
@@ -563,6 +563,11 @@ function addListeners() {
 			(item) => {item.classList.remove("form-visible")}
 		);
 		form.classList.add("form-visible");
+
+		document.querySelectorAll(".augment-radio-item").forEach(
+			(item) => {item.classList.remove("is-active")}
+		);
+		li.classList.add("is-active");
 	}
 
 	var allAugmentInputs = document.querySelectorAll(".augment-input");
@@ -580,8 +585,9 @@ function addListeners() {
 					var buttonText = scopeButton.getAttribute("id").split('-')[0];
 					var cmd = buttonText.toLowerCase().slice(0, 3);
 					var form = document.querySelector("#augment-"+cmd+"-input-"+name);
+					var li = document.querySelector("#augment-radio-item-"+buttonText+'-'+name);
 
-					enableAugment(form);
+					enableAugment(form, li);
 				}})(button);
 			}
 		}})(augmentInput);

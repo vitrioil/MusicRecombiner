@@ -32,7 +32,10 @@
 						</button>
 
 						<button id={{"button-"~name}} class="tile button is-info is-rounded button-play-wave is-child">
-							<i class="fa fa-play"></i>
+							<span class="fa-layers fa-fw">
+								<i class="fa fa-play" data-fa-transform="shrink-4 left-4"></i>
+								<i class="fa fa-pause" data-fa-transform="shrink-4 right-4"></i>
+							</span>
 						</button>
 
 						<button id={{"button-stop-"~name}} class="tile button is-info is-rounded button-stop-wave is-child">
@@ -89,46 +92,29 @@
 		<form role="form" id={{"form-"~name}} class="augment-form">
 
 			<div class="tile is-vertical jty-ctr">
-				<nav class="tile level" style="width: 50%;">
-					<div class="level-left">
-						<div class="level-item">
-							<div class="field has-addons">
-								<div class="columns">
-									<label for={{"start-"~name}} class="column ctr-lbl">Start</label>
-									<div class="column control is-4">
-										<input class="input" id={{"start-"~name}} name={{"start-"~name}} />
-									</div>
+				<div class="tabs is-boxed">
+					<ul class="augment-input" id={{'augment-input-'~name}}>
+						{% for aug in augment %}
+							<li id={{"augment-radio-item-"~aug~'-'~name}} class="augment-radio-item">
+								<a id={{aug~'-'~name}} class="augment-radio no-border" type="button">
+									{{aug}}
+								</a>
+							</li>
+						{% endfor %}
+					</ul>
+				</div>
 
-									<label for={{"end-"~name}} class="column ctr-lbl">End</label>
-									<div class="column control is-4">
-										<input class="input" id={{"end-"~name}} name={{"end-"~name}} />
-									</div>
-								</div>
-							</div>
-						</div>
+				<div class="columns tile">
+					<label for={{"start-"~name}} class="column ctr-lbl">Start</label>
+					<div class="column control is-4">
+						<input class="input" id={{"start-"~name}} name={{"start-"~name}} />
 					</div>
 
-					<div class="level-right">
-						<div class="level-item">
-							<div class="field has-addons augment-input" id={{"augment-input-"~name}}>
-								{% for aug in augment %}
-									<div class="control">
-										<button type="button" class="button is-info augment-radio" id={{aug~'-'~name}}>
-											{{ aug }}
-										</button>
-									</div>
-								{% endfor %}
-								<div class="control">
-									<button type="button" class="button is-primary" id={{"add-command-"~name}}>Add</button>
-								</div>
-
-								<div class="control">
-									<button type="submit" class="button is-success">Save</button>
-								</div>
-							</div>
-						</div>
+					<label for={{"end-"~name}} class="column ctr-lbl">End</label>
+					<div class="column control is-4">
+						<input class="input" id={{"end-"~name}} name={{"end-"~name}} />
 					</div>
-				</nav>
+				</div>
 
 				<div class="tile augment-form-container">
 					<nav class="level augment-form augment-form-nest-input vol-input form-visible" id={{"augment-vol-input-"~name}}>
@@ -160,7 +146,13 @@
 						</div>
 					</nav>
 				</div>
+
+				<div class="tile columns">
+					<button type="button" class="tile column is-8 button is-primary" id={{"add-command-"~name}}>Add</button>
+					<button type="submit" class="tile column is-8 button is-primary">Close</button>
+				</div>
 			</div>
+
 		</form>
 
 	{% endfor %}
@@ -189,8 +181,10 @@
 			</button>
 
 			<button id="play-all" class="level-item button is-link is-rounded">
-				<i class="fa fa-play"></i>
-				<i class="fa fa-pause"></i>
+				<span class="fa-layers fa-fw">
+					<i class="fa fa-play" data-fa-transform="shrink-4 left-4"></i>
+					<i class="fa fa-pause" data-fa-transform="shrink-4 right-4"></i>
+				</span>
 			</button>
 
 			<button id="stop-all" class="level-item button is-link is-rounded">
