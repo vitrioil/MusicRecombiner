@@ -37,6 +37,64 @@ class Augment:
         start, end = self._bound_check(start, end, length)
         return start, end, length
 
+    def augment_one(self, interval: Tuple[float, float], sample_rate: int, modify: callable):
+        """Change amplitude of the signal.
+
+            Args:
+                interval tuple(float, float): time interval to modify.
+                gain (float): (1>gain>0) float to indicate volume change.
+                sample_rate (int): sampling rate of audio.
+                modify (callable): modify the signal with custom logic.
+
+            Returns:
+                self.
+        """
+        start, end = self._preprocess_interval(interval, sample_rate)
+
+        def _apply(signal: Iterable[float]):
+            nonlocal start, end
+            start, end, length = self._interval_check(signal, start, end)
+            if not (start < end < length):
+                raise ValueError(f"Interval: ({start}, {end}) out of range for (0, {length})")
+
+            signal = modify(signal, start, end)
+            return signal
+
+        self.command.append(_apply)
+        return self
+
+    def augment_two(self, interval: Tuple[float, float], new_start: float, sample_rate: int,
+                   modify: callable):
+        """Copy a signal in the interval to a new location.
+
+            Args:
+                interval tuple(float, float): time interval to copy.
+                new_start float: new location start.
+                sample_rate int: sampling rate of signal.
+                modify (callable): modify the signal with custom logic.
+
+            Returns:
+                self.
+        """
+        start, end = interval
+        new_end = new_start + (end - start)
+
+        start, end = self._preprocess_interval((start, end), sample_rate)
+        new_start, new_end = self._preprocess_interval((new_start, new_end), sample_rate)
+
+        def _apply(signal: Iterable[float]):
+            nonlocal start, end, new_start, new_end
+            start, end, length = self._interval_check(signal, start, end)
+            new_start, new_end = self._bound_check(new_start, new_end, length)
+            if not (start < end < length) or not (new_start < new_end < length):
+                raise ValueError(f"Interval: ({start}, {end}) or ({new_start}, {new_end}) out of range for (0, {length})")
+
+            signal = modify(signal, start, end, new_start, new_end)
+            return signal
+
+        self.command.append(_apply)
+        return self
+
     def amplitude(self, interval: Tuple[float, float], gain: float, sample_rate: int):
         """Change amplitude of the signal.
 
@@ -48,22 +106,14 @@ class Augment:
             Returns:
                 self.
         """
-        start, end = self._preprocess_interval(interval, sample_rate)
+        def _amplitude(signal, start, end):
+            signal[start: end] *= gain
+            return signal
 
         if not (0 <= gain <= 1):
             raise ValueError(f"gain: {gain} should be in [0, 1]")
 
-        def _apply(signal: Iterable[float]):
-            nonlocal start, end
-            start, end, length = self._interval_check(signal, start, end)
-            if not (start < end < length):
-                raise ValueError(f"Interval: ({start}, {end}) out of range for (0, {length})")
-
-            signal[start: end] *= gain
-            return signal
-
-        self.command.append(_apply)
-        return self
+        return self.augment_one(interval, sample_rate, _amplitude)
 
     def copy(self, interval: Tuple[float, float], copy_start: float, sample_rate: int):
         """Copy a signal in the interval to a new location.
@@ -71,28 +121,34 @@ class Augment:
             Args:
                 interval tuple(float, float): time interval to copy.
                 copy_start float: new location start.
+                sample_rate int: sampling rate of signal.
 
             Returns:
                 self.
         """
-        start, end = interval
-        copy_end = copy_start + (end - start)
-
-        start, end = self._preprocess_interval((start, end), sample_rate)
-        copy_start, copy_end = self._preprocess_interval((copy_start, copy_end), sample_rate)
-
-        def _apply(signal: Iterable[float]):
-            nonlocal start, end, copy_start, copy_end
-            start, end, length = self._interval_check(signal, start, end)
-            copy_start, copy_end = self._bound_check(copy_start, copy_end, length)
-            if not (start < end < length) or not (copy_start < copy_end < length):
-                raise ValueError(f"Interval: ({start}, {end}) or ({copy_start}, {copy_end}) out of range for (0, {length})")
-
-            signal[copy_start: copy_end] = signal[start: end]
+        def _copy(signal, start, end, new_start, new_end):
+            signal[new_start: new_end] = signal[start:end]
             return signal
 
-        self.command.append(_apply)
-        return self
+        return self.augment_two(interval, copy_start, sample_rate, _copy)
+
+    def overlay(self, interval: Tuple[float, float], overlay_start: float, sample_rate: int):
+        """Overlay an interval to another.
+
+            Args:
+                interval tuple(float, float): time interval to copy.
+                overlay_start float: overlay start.
+                sample_rate int: sampling rate of signal.
+
+            Returns:
+                self.
+        """
+        def _overlay(signal, start, end, new_start, new_end):
+            signal[new_start: new_end] += signal[start:end]
+            signal[new_start: new_end] /= 2
+            return signal
+
+        return self.augment_two(interval, overlay_start, sample_rate, _overlay)
 
     def augment(self, signal: Signal, signal_name: str):
         """Augment the signal specified by the name.

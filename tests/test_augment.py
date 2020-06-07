@@ -56,19 +56,29 @@ def test_amplitude():
 def test_copy():
     augment = Augment()
 
-    augment.copy((2, 3), 4, 1)
+    augment.copy((2, 5), 7, 1)
     augment.augment(dummy_signal, "test")
 
     audio = dummy_signal.get("test")
-    assert audio[2: 3] == audio[4: 5]
+    assert np.allclose(audio[2: 5], audio[7: 10])
 
     augment.clear()
     with pytest.raises(ValueError) as pe:
         augment.copy((2, 300), 4, 1)
         augment.augment(dummy_signal, "test")
 
+    with pytest.raises(ValueError) as pe:
         augment.clear()
         augment.copy((2, 3), 400, 1)
         augment.augment(dummy_signal, "test")
-    
 
+def test_overlay():
+    dummy_signal = Signal(["test"], [np.array(range(100), dtype=np.float32)])
+    augment = Augment()
+
+    augment.overlay((5, 10), 17, 1)
+    augment.augment(dummy_signal, "test")
+
+    audio = dummy_signal.get("test")
+    actual = np.array([11, 12, 13, 14, 15], dtype=np.float32)
+    assert np.allclose(audio[17: 22], actual)

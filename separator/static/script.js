@@ -1,3 +1,123 @@
+class Volume {
+	start;
+	end;
+	volume;
+	name="Volume";
+
+	constructor(attr) {
+		this.start = attr["start"];
+		this.end = attr["end"];
+		this.volume = attr["volume"];
+	}
+
+	static pretty(obj) {
+		return {
+			"Command Name": obj.name,
+			"Start Timestamp": obj.start,
+			"End Timestamp": obj.end,
+			"Target Volume": obj.volume + "%"
+		};
+	}
+
+	static getAttributes(audioName) {
+		/*
+		 * Get volume augmentation input
+		 */
+		var form = document.querySelector("#form-"+audioName)
+		var newVolume = document.querySelector("#vol-input-slider-"+audioName).value;
+		var newStart = form.elements["start-"+audioName].value;
+		var newEnd = form.elements["end-"+audioName].value;
+
+		return new Volume({start: newStart, end: newEnd, volume: newVolume})
+	}
+
+}
+
+class Copy {
+	start;
+	end;
+	copyStart;
+	name="Copy";
+
+	constructor(attr) {
+		this.start = attr["start"];
+		this.end = attr["end"];
+		this.copyStart = attr["copyStart"];
+	}
+
+	static pretty(obj) {
+		return {
+			"Command Name": obj.name,
+			"Start Timestamp": obj.start,
+			"End Timestamp": obj.end,
+			"New Copy Timestamp": obj.copyStart
+		};
+	}
+
+	static getAttributes(audioName, wavesurfer) {
+		/*
+		 * Get copy augmentation input
+		 */
+		var oldStart = Number(document.querySelector("#start-"+audioName).value);
+		var oldEnd = Number(document.querySelector("#end-"+audioName).value);
+		var copyStart = Number(document.querySelector("#cop-start-"+audioName).value);
+
+		var copyEnd = copyStart + oldEnd - oldStart
+		wavesurfer.regions.add(wavesurfer.addRegion({
+			start: copyStart,
+			end: copyEnd,
+			drag: false,
+			resize: false,
+			color: getCopyColor()
+		}));
+
+		return new Copy({start: oldStart, end: oldEnd, copyStart: copyStart})
+	}
+
+}
+
+class Overlay {
+	start;
+	end;
+	overlayStart;
+	name="Overlay";
+
+	constructor(attr) {
+		this.start = attr["start"];
+		this.end = attr["end"];
+		this.overlayStart = attr["overlayStart"];
+	}
+
+	static pretty(obj) {
+		return {
+			"Command Name": obj.name,
+			"Start Timestamp": obj.start,
+			"End Timestamp": obj.end,
+			"New Overlay Timestamp": obj.overlayStart
+		};
+	}
+
+	static getAttributes(audioName, wavesurfer) {
+		/*
+		 * Get overlay augmentation input
+		 */
+		var oldStart = Number(document.querySelector("#start-"+audioName).value);
+		var oldEnd = Number(document.querySelector("#end-"+audioName).value);
+		var overlayStart = Number(document.querySelector("#ove-start-"+audioName).value);
+
+		var overlayEnd = overlayStart + oldEnd - oldStart
+		wavesurfer.regions.add(wavesurfer.addRegion({
+			start: overlayStart,
+			end: overlayEnd,
+			drag: false,
+			resize: false,
+		}));
+
+		return new Overlay({start: oldStart, end: oldEnd, overlayStart: overlayStart})
+	}
+
+}
+
 class CommandStore {
 	/*
 	 * Stores all the augmentation input
@@ -163,6 +283,28 @@ function printStorage() {
 	return CommandStore.customStorage;
 }
 
+function cmdAttributeMapper(cmdName, audioName, wavesurfer) {
+	if(cmdName === "cop") {
+		return Copy.getAttributes(audioName, wavesurfer);
+	} else if(cmdName === "vol") {
+		return Volume.getAttributes(audioName);
+	} else if(cmdName === "ove") {
+		return Overlay.getAttributes(audioName, wavesurfer);
+	} else {
+		alert(cmdName);
+	}
+}
+
+function cmdPrettyMapper(cmdName, obj) {
+	if(cmdName === "Copy") {
+		return Copy.pretty(obj);
+	} else if(cmdName === "Volume") {
+		return Volume.pretty(obj);
+	} else if(cmdName === "Overlay") {
+		return Overlay.pretty(obj);
+	}
+}
+
 class Command {
 	/*
 	 * This class deals with retrieval of user
@@ -192,45 +334,7 @@ class Command {
 		 * create object of the specific
 		 * command
 		 */
-		if(this.commandName === "vol") {
-			//Volume
-			return new Volume(this.getVolumeAttributes());
-		} else if(this.commandName === "cop") {
-			//Copy
-			return new Copy(this.getCopyAttributes());
-		}
-	}
-
-	getVolumeAttributes() {
-		/*
-		 * Get volume augmentation input
-		 */
-		var form = document.querySelector("#form-"+this.audioName)
-		var newVolume = document.querySelector("#vol-input-slider-"+this.audioName).value;
-		var newStart = form.elements["start-"+this.audioName].value;
-		var newEnd = form.elements["end-"+this.audioName].value;
-
-		return {start: newStart, end: newEnd, volume: newVolume}
-	}
-
-	getCopyAttributes() {
-		/*
-		 * Get copy augmentation input
-		 */
-		var oldStart = Number(document.querySelector("#start-"+this.audioName).value);
-		var oldEnd = Number(document.querySelector("#end-"+this.audioName).value);
-		var copyStart = Number(document.querySelector("#cop-start-"+this.audioName).value);
-
-		var copyEnd = copyStart + oldEnd - oldStart
-		this.wavesurfer.regions.add(this.wavesurfer.addRegion({
-			start: copyStart,
-			end: copyEnd,
-			drag: false,
-			resize: false,
-			color: getCopyColor()
-		}));
-
-		return {start: oldStart, end: oldEnd, copyStart: copyStart}
+		return cmdAttributeMapper(this.commandName, this.audioName, this.wavesurfer)
 	}
 
 	/*
@@ -242,50 +346,6 @@ class Command {
 		jsonObject[this.audioName] = this.command;
 		jsonObject["commandName"] = this.command.name;
 		return jsonObject;
-	}
-}
-
-class Volume {
-	start;
-	end;
-	volume;
-	name="Volume";
-
-	constructor(attr) {
-		this.start = attr["start"];
-		this.end = attr["end"];
-		this.volume = attr["volume"];
-	}
-
-	static pretty(obj) {
-		return {
-			"Command Name": obj.name,
-			"Start Timestamp": obj.start,
-			"End Timestamp": obj.end,
-			"Target Volume": obj.volume + "%"
-		};
-	}
-}
-
-class Copy {
-	start;
-	end;
-	copyStart;
-	name="Copy";
-
-	constructor(attr) {
-		this.start = attr["start"];
-		this.end = attr["end"];
-		this.copyStart = attr["copyStart"];
-	}
-
-	static pretty(obj) {
-		return {
-			"Command Name": obj.name,
-			"Start Timestamp": obj.start,
-			"End Timestamp": obj.end,
-			"New Copy Timestamp": obj.copyStart
-		};
 	}
 }
 
@@ -358,6 +418,11 @@ document.addEventListener("DOMContentLoaded", function() {
 		//Initialize storage for particular signal
 		CommandStore.initStorage(name);
 		CommandStore.storeSessionName(dir);
+	}
+
+	var tool = document.querySelector("#tool-kit");
+	if(waves.length > 2) {
+		tool.classList.add("tool");
 	}
 });
 
@@ -490,10 +555,7 @@ function addListeners() {
 		}
 	}
 
-	var volume_button = document.querySelector("#radio-Volume");
-	var copy_button = document.querySelector("#radio-Copy");
-
-	function enableAugment(form) {
+	function enableAugment(form, li) {
 		/*
 		 * Toggle form based on user click
 		 */
@@ -501,6 +563,11 @@ function addListeners() {
 			(item) => {item.classList.remove("form-visible")}
 		);
 		form.classList.add("form-visible");
+
+		document.querySelectorAll(".augment-radio-item").forEach(
+			(item) => {item.classList.remove("is-active")}
+		);
+		li.classList.add("is-active");
 	}
 
 	var allAugmentInputs = document.querySelectorAll(".augment-input");
@@ -518,8 +585,9 @@ function addListeners() {
 					var buttonText = scopeButton.getAttribute("id").split('-')[0];
 					var cmd = buttonText.toLowerCase().slice(0, 3);
 					var form = document.querySelector("#augment-"+cmd+"-input-"+name);
+					var li = document.querySelector("#augment-radio-item-"+buttonText+'-'+name);
 
-					enableAugment(form);
+					enableAugment(form, li);
 				}})(button);
 			}
 		}})(augmentInput);
@@ -736,11 +804,7 @@ function removeMarkedItems() {
 }
 
 function getPrettyCommand(cmdName, cmd) {
-	if(cmdName === "Copy") {
-		return Copy.pretty(cmd);
-	} else if(cmdName === "Volume") {
-		return Volume.pretty(cmd);
-	}
+	return cmdPrettyMapper(cmdName, cmd);
 }
 
 function getCopyColor() {
