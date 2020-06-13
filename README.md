@@ -25,3 +25,10 @@ Work is still in progress.
 ![Example](img/mr_augment_page.png "Augment Page")
 ![Example](img/mr_no_augmentations.png "No Augmentations Modal")
 ![Example](img/mr_augmentations.png "Augmentations Modal")
+
+# Docker
+After starting the container run:
+```bash
+service postgresql start
+python app.py -c
+```

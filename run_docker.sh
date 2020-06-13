@@ -1,6 +1,5 @@
 #!/bin/bash
 
-username=$(whoami)
-read -p "Docker image name:" image_name
-echo $username
-sudo docker run --gpus all -it --rm -v /home/$username:/home/$username --name spleeter_dev $image_name
+read -p "Docker image name (default=spleeter1.1:latest):" image_name
+image_name=${image_name:-'spleeter1.1:latest'}
+sudo docker run -p 5000:5000 --rm -it --name spleeter_music spleeter1.1:latest bash
